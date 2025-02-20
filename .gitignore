@@ -1,0 +1,4 @@
+.idea
+backend/venv
+**/.DS_Store
+**/__pycache__/**
