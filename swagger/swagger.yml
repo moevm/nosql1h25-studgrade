@@ -24,6 +24,28 @@ paths:
   /users:
     get:
       summary: "Get all users"
+      parameters:
+        - in: query
+          name: limit
+          schema:
+            type: integer
+          description: "Number of items to return"
+        - in: query
+          name: offset
+          schema:
+            type: integer
+          description: "Number of items to skip"
+        - in: query
+          name: sort_by
+          schema:
+            type: string
+          description: "Field to sort by"
+        - in: query
+          name: order
+          schema:
+            type: string
+            enum: [asc, desc]
+          description: "Sort order"
       tags:
         - users
       responses:
@@ -115,13 +137,57 @@ paths:
           schema:
             type: string
         - in: query
+          name: birth_date
+          schema:
+            type: string
+            format: date
+        - in: query
           name: admission_year
           schema:
             type: integer
         - in: query
+          name: student_type
+          schema:
+            type: string
+            enum: [bachelor, master, aspirant, specialist]
+        - in: query
+          name: course
+          schema:
+            type: integer
+        - in: query
+          name: program_name
+          schema:
+            type: string
+            enum: [Theoretical math, Applied physics, Computer science]
+        - in: query
           name: faculty
           schema:
             type: string
+            enum: [Math, Physics, IT]
+        - in: query
+          name: group_name
+          schema:
+            type: string
+            enum: ["2323", "1421", "3501"]
+        - in: query
+          name: limit
+          schema:
+            type: integer
+        - in: query
+          name: offset
+          schema:
+            type: integer
+        - in: query
+          name: sort_by
+          schema:
+            type: string
+          description: "Field to sort by"
+        - in: query
+          name: order
+          schema:
+            type: string
+            enum: [asc, desc]
+          description: "Sort order"
       responses:
         "200":
           description: "List of students"
@@ -144,6 +210,7 @@ paths:
       responses:
         "201":
           description: "Student created"
+
   /students/{id}:
     get:
       summary: "Get student by ID"
@@ -301,6 +368,18 @@ paths:
         - teachers
       parameters:
         - in: query
+          name: first_name
+          schema:
+            type: string
+        - in: query
+          name: middle_name
+          schema:
+            type: string
+        - in: query
+          name: last_name
+          schema:
+            type: string
+        - in: query
           name: limit
           schema:
             type: integer
@@ -399,6 +478,10 @@ paths:
       tags:
         - subjects
       parameters:
+        - in: query
+          name: subject_name
+          schema:
+            type: string
         - in: query
           name: limit
           schema:
@@ -586,8 +669,6 @@ components:
         email:
           type: string
         login:
-          type: string
-        password_hash:
           type: string
         first_name:
           type: string
