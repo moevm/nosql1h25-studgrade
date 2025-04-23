@@ -1,0 +1,49 @@
+:root {
+  --background-color: #f9f8f4;
+  --font-color: #000;
+
+  --frame-background-color: #fff;
+  --action-color: #985ace;
+  --second-action-color: #f8f1ff;
+  --third-action-color: #8c5abf;
+  --fourth-action-color: #444444;
+  --action-text-color: #fff;
+
+  --input-color: #403a4b;
+  --input-background-color: var(--second-action-color);
+
+  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+
+  color: var(--font-color);
+  background-color: var(--background-color);
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  width: 100%;
+  position: relative;
+}
+
+*,
+*:before,
+*:after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  min-height: 100vh;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+#root {
+  width: 100%;
+  height: 100%;
+}
