@@ -1,0 +1,827 @@
+openapi: "3.0.3"
+info:
+  title: "StudGrade API"
+  version: "0.0.1"
+  description: |-
+    This is docs for implementors only.
+
+    **To get real RESTAPI start backend and visit [http://localhost:8000/api/docs](http://localhost:8000/api/docs)**
+servers:
+  - url: "http://localhost:8000/api"
+tags:
+  - name: users
+    description: Base users info
+  - name: students
+    description: Students and them statistic about subject
+  - name: logs
+  - name: teachers
+    description: Teachers
+  - name: subjects
+    description: Meta information about subjects
+  - name: bulk
+    description: Bulk operations about objects
+paths:
+  /users:
+    get:
+      summary: "Get all users"
+      parameters:
+        - in: query
+          name: limit
+          schema:
+            type: integer
+          description: "Number of items to return"
+        - in: query
+          name: offset
+          schema:
+            type: integer
+          description: "Number of items to skip"
+        - in: query
+          name: sort_by
+          schema:
+            type: string
+          description: "Field to sort by"
+        - in: query
+          name: order
+          schema:
+            type: string
+            enum: [asc, desc]
+          description: "Sort order"
+      tags:
+        - users
+      responses:
+        "200":
+          description: "List of users"
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/User"
+    post:
+      summary: "Create user"
+      tags:
+        - users
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/User"
+      responses:
+        "201":
+          description: "User created"
+
+  /users/{id}:
+    get:
+      summary: "Get user by ID"
+      tags:
+        - users
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: "User data"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+    patch:
+      summary: "Update user"
+      tags:
+        - users
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/User"
+      responses:
+        "200":
+          description: "User updated"
+    delete:
+      summary: "Delete user"
+      tags:
+        - users
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        "204":
+          description: "User deleted"
+
+  /students:
+    get:
+      summary: "Get all students"
+      tags:
+        - students
+      parameters:
+        - in: query
+          name: first_name
+          schema:
+            type: string
+        - in: query
+          name: last_name
+          schema:
+            type: string
+        - in: query
+          name: birth_date
+          schema:
+            type: string
+            format: date
+        - in: query
+          name: admission_year
+          schema:
+            type: integer
+        - in: query
+          name: student_type
+          schema:
+            type: string
+            enum: [bachelor, master, aspirant, specialist]
+        - in: query
+          name: course
+          schema:
+            type: integer
+        - in: query
+          name: program_name
+          schema:
+            type: string
+            enum: [Theoretical math, Applied physics, Computer science]
+        - in: query
+          name: faculty
+          schema:
+            type: string
+            enum: [Math, Physics, IT]
+        - in: query
+          name: group_name
+          schema:
+            type: string
+            enum: ["2323", "1421", "3501"]
+        - in: query
+          name: limit
+          schema:
+            type: integer
+        - in: query
+          name: offset
+          schema:
+            type: integer
+        - in: query
+          name: sort_by
+          schema:
+            type: string
+          description: "Field to sort by"
+        - in: query
+          name: order
+          schema:
+            type: string
+            enum: [asc, desc]
+          description: "Sort order"
+      responses:
+        "200":
+          description: "List of students"
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/StudentWithStatistic"
+    post:
+      summary: "Create student"
+      tags:
+        - students
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Student"
+      responses:
+        "201":
+          description: "Student created"
+
+  /students/{id}:
+    get:
+      summary: "Get student by ID"
+      tags:
+        - students
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: "Student data"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StudentWithStatistic"
+    patch:
+      summary: "Update student"
+      tags:
+        - students
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Student"
+      responses:
+        "200":
+          description: "Student updated"
+    delete:
+      summary: "Delete student"
+      tags:
+        - students
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        "204":
+          description: "Student deleted"
+
+  /logs:
+    get:
+      summary: "Get all logs"
+      tags:
+        - logs
+      parameters:
+        - in: query
+          name: limit
+          schema:
+            type: integer
+        - in: query
+          name: offset
+          schema:
+            type: integer
+        - in: query
+          name: sort_by
+          schema:
+            type: string
+          description: "Field to sort by"
+        - in: query
+          name: order
+          schema:
+            type: string
+            enum: [asc, desc]
+          description: "Sort order"
+      responses:
+        "200":
+          description: "A list of logs"
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Log"
+    post:
+      summary: "Create a new log"
+      tags:
+        - logs
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Log"
+      responses:
+        "201":
+          description: "Log created"
+
+  /logs/{id}:
+    get:
+      summary: "Get a log by ID"
+      tags:
+        - logs
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: "A single log"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Log"
+    patch:
+      summary: "Update a log"
+      tags:
+        - logs
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Log"
+      responses:
+        "200":
+          description: "Log updated"
+    delete:
+      summary: "Delete a log"
+      tags:
+        - logs
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        "204":
+          description: "Log deleted"
+
+  /teachers:
+    get:
+      summary: "Get all teachers"
+      tags:
+        - teachers
+      parameters:
+        - in: query
+          name: first_name
+          schema:
+            type: string
+        - in: query
+          name: middle_name
+          schema:
+            type: string
+        - in: query
+          name: last_name
+          schema:
+            type: string
+        - in: query
+          name: limit
+          schema:
+            type: integer
+        - in: query
+          name: offset
+          schema:
+            type: integer
+        - in: query
+          name: sort_by
+          schema:
+            type: string
+          description: "Field to sort by"
+        - in: query
+          name: order
+          schema:
+            type: string
+            enum: [asc, desc]
+          description: "Sort order"
+      responses:
+        "200":
+          description: "A list of teachers"
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/TeacherWithUser"
+    post:
+      summary: "Create a new teacher"
+      tags:
+        - teachers
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Teacher"
+      responses:
+        "201":
+          description: "Teacher created"
+
+  /teachers/{id}:
+    get:
+      summary: "Get a teacher by ID"
+      tags:
+        - teachers
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: "A single teacher"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TeacherWithUser"
+    patch:
+      summary: "Update a teacher"
+      tags:
+        - teachers
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Teacher"
+      responses:
+        "200":
+          description: "Teacher updated"
+    delete:
+      summary: "Delete a teacher"
+      tags:
+        - teachers
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        "204":
+          description: "Teacher deleted"
+
+  /subjects:
+    get:
+      summary: "Get all subjects"
+      tags:
+        - subjects
+      parameters:
+        - in: query
+          name: subject_name
+          schema:
+            type: string
+        - in: query
+          name: limit
+          schema:
+            type: integer
+        - in: query
+          name: offset
+          schema:
+            type: integer
+        - in: query
+          name: sort_by
+          schema:
+            type: string
+          description: "Field to sort by"
+        - in: query
+          name: order
+          schema:
+            type: string
+            enum: [asc, desc]
+          description: "Sort order"
+      responses:
+        "200":
+          description: "A list of subjects"
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/SubjectMeta"
+    post:
+      summary: "Create a new subject"
+      tags:
+        - subjects
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SubjectMeta"
+      responses:
+        "201":
+          description: "Subject created"
+
+  /subjects/{id}:
+    get:
+      summary: "Get a subject by ID"
+      tags:
+        - subjects
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: "A single subject"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SubjectMeta"
+    patch:
+      summary: "Update a subject"
+      tags:
+        - subjects
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SubjectMeta"
+      responses:
+        "200":
+          description: "Subject updated"
+    delete:
+      summary: "Delete a subject"
+      tags:
+        - subjects
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        "204":
+          description: "Subject deleted"
+  /users/bulk:
+    post:
+      summary: "Bulk create users"
+      tags:
+        - users
+        - bulk
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: "#/components/schemas/User"
+      responses:
+        "201":
+          description: "Users created"
+  /students/bulk:
+    post:
+      summary: "Bulk create students"
+      tags:
+        - students
+        - bulk
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: "#/components/schemas/Student"
+      responses:
+        "201":
+          description: "Students created"
+  /logs/bulk:
+    post:
+      summary: "Bulk create logs"
+      tags:
+        - logs
+        - bulk
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: "#/components/schemas/Log"
+      responses:
+        "201":
+          description: "Logs created"
+  /teachers/bulk:
+    post:
+      summary: "Bulk create teachers"
+      tags:
+        - teachers
+        - bulk
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: "#/components/schemas/Teacher"
+      responses:
+        "201":
+          description: "Teachers created"
+  /subjects/bulk:
+    post:
+      summary: "Bulk create subjects"
+      tags:
+        - subjects
+        - bulk
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: "#/components/schemas/SubjectMeta"
+      responses:
+        "201":
+          description: "Subjects created"
+components:
+  schemas:
+    User:
+      type: object
+      properties:
+        _id:
+          type: string
+        email:
+          type: string
+        login:
+          type: string
+        first_name:
+          type: string
+        middle_name:
+          type: string
+        last_name:
+          type: string
+        active:
+          type: boolean
+        role_id:
+          type: string
+
+    SubjectRecord:
+      type: object
+      properties:
+        subject_id:
+          type: string
+        total_lessons:
+          type: integer
+        attendance_lessons:
+          type: integer
+        year:
+          type: integer
+        season:
+          type: string
+          enum: [autumn, spring]
+        prediction_score:
+          type: number
+          format: float
+        score:
+          type: number
+          format: float
+        grade_value:
+          type: string
+          enum: [pass, fail, "5", "4", "3"]
+          nullable: true
+
+    Statistic:
+      type: object
+      properties:
+        _id:
+          type: string
+        average_score:
+          type: number
+          format: float
+        attendance_percent:
+          type: number
+          format: float
+        calculation_date:
+          type: string
+          format: date
+        count_activities:
+          type: integer
+        exclusion_probability:
+          type: number
+          format: float
+        subjects:
+          type: array
+          items:
+            $ref: "#/components/schemas/SubjectRecord"
+
+    Student:
+      type: object
+      properties:
+        _id:
+          type: string
+        user_id:
+          type: string
+        birth_date:
+          type: string
+          format: date
+        admission_year:
+          type: integer
+        student_type:
+          type: string
+        course:
+          type: integer
+        program_name:
+          type: string
+        faculty:
+          type: string
+        group_name:
+          type: string
+        funding_type:
+          type: string
+        statistic_id:
+          type: string
+
+    StudentWithStatistic:
+      allOf:
+        - $ref: "#/components/schemas/Student"
+        - type: object
+          properties:
+            statistic:
+              $ref: "#/components/schemas/Statistic"
+
+    Log:
+      type: object
+      properties:
+        _id:
+          type: string
+        user_id:
+          type: string
+        action_type:
+          type: string
+        action_date:
+          type: string
+          format: date
+        ip_address:
+          type: string
+        affected_entity:
+          type: string
+        entity_id:
+          type: string
+        description:
+          type: string
+        role:
+          type: string
+    Teacher:
+      type: object
+      properties:
+        _id:
+          type: string
+        user_id:
+          type: string
+        assigned_groups:
+          type: array
+          items:
+            type: string
+        assigned_subjects:
+          type: array
+          items:
+            type: string
+    TeacherWithUser:
+      allOf:
+        - $ref: "#/components/schemas/Teacher"
+        - type: object
+          properties:
+            user:
+              $ref: "#/components/schemas/User"
+    SubjectMeta:
+      type: object
+      properties:
+        _id:
+          type: string
+        subject_name:
+          type: string
+        description:
+          type: string
+        grade_type:
+          type: string
+          enum:
+            - pass/fail
+            - exam
+        is_activity:
+          type: boolean
