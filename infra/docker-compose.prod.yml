@@ -1,0 +1,8 @@
+version: '3.8'
+
+services:
+  frontend:
+    build:
+      dockerfile: Dockerfile.prod
+    ports:
+      - "127.0.0.1:5173:80"
