@@ -1,17 +1,14 @@
 import uvicorn
 from fastapi import FastAPI
-from motor.motor_asyncio import AsyncIOMotorClient
+from .handlers.subjects.handler import router as subjects_router
 
-
-# db
-# db_url = "mongodb://user:password@mongo:27017/master?authSource=admin"
-# client = AsyncIOMotorClient(db_url)
-# db = client["master"]
-# students_collection = db["students"]
-
-# app
 app = FastAPI()
 
+app.include_router(
+    subjects_router,
+    prefix="/subjects",
+    tags=["subjects"]
+)
 
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8000)
