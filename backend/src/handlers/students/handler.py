@@ -1,11 +1,12 @@
-from fastapi import APIRouter, HTTPException, Query, status
 from typing import Optional, List, Literal
+from fastapi import APIRouter, HTTPException, Query, status
 from datetime import datetime, date
+from bson import ObjectId
+from pydantic import TypeAdapter
 
 from src.schemas.students import Student, StudentWithStatistic
 from src.db import db
-from bson import ObjectId
-from pydantic import TypeAdapter
+
 
 router = APIRouter()
 
