@@ -2,6 +2,7 @@ import { createBrowserRouter } from "react-router-dom";
 
 // Import the pages
 import ProfilePage from "./pages/ProfilePage";
+import StatsMainPage from "./pages/StatsMainPage";
 
 // Import the layouts
 import PageLayout from "./components/PageLayout";
@@ -15,7 +16,7 @@ export const router = createBrowserRouter([
         path: "/profile",
       },
       {
-        element: <div>Stats Page</div>,
+        element: <StatsMainPage />,
         path: "/",
       },
     ],
