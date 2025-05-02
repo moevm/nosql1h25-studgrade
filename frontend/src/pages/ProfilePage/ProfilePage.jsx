@@ -3,153 +3,274 @@ import EditIcon from "../../public/edit_button.svg?react";
 import MailIcon from "../../public/mail.svg?react";
 import CallIcon from "../../public/call.svg?react";
 import MoreIcon from "../../public/more.svg?react";
+import { useStudentById, useUpdateStudentById } from "../../hooks/useStudents";
+import { useEffect, useState } from "react";
+import getFullName from "../../utils/getFullName";
 
 const ProfilePage = () => {
+  const {
+    student: user,
+    loading,
+    error,
+  } = useStudentById("6814fdae2fc966af516ab827");
+
+  const {
+    update,
+    loading: updateLoading,
+    error: updateError,
+  } = useUpdateStudentById();
+
+  const [userData, setUserData] = useState({});
+
+  useEffect(() => {
+    if (user) {
+      setUserData(user);
+    }
+  }, [user]);
+
+  const [isEditMode, setIsEditMode] = useState(false);
+
+  const handleEditClick = () => {
+    setIsEditMode((prev) => !prev);
+  };
+
+  const handleSaveClick = () => {
+    console.log("userData", userData);
+    update(userData._id, userData);
+  };
+
+  if (loading || updateLoading)
+    return <div className={styles.main_block}>Loading...</div>;
+  if (error || updateError)
+    return (
+      <div className={styles.main_block}>
+        Error: {error?.message || updateError?.message}
+      </div>
+    );
+  if (!user)
+    return <div className={styles.main_block}>Пользователь не найден</div>;
   return (
     <div className={styles.main_block}>
       <div className={styles.main_head}>
         <div className={styles.main_header}>Профиль</div>
-        <div className={styles.edit_button}>
-            <EditIcon/>
-        </div>
+        <button className={styles.edit_button} onClick={handleEditClick}>
+          <EditIcon />
+        </button>
+        {isEditMode && (
+          <button className={styles.edit_button} onClick={handleSaveClick}>
+            Сохранить
+          </button>
+        )}
       </div>
       <div className={styles.main_columns_container}>
         <div className={styles.fields_colomns_container}>
           <div className={styles.fields_colomn}>
-            
             <div className={styles.fields_row}>
-              <div className={styles.field}>
+              <label className={styles.field}>
                 <div className={styles.filed_name}>Фамилия</div>
-                <input className={styles.filed_input} type="text" id="middle_name"/>
-              </div>
+                <input
+                  readOnly={!isEditMode}
+                  className={styles.filed_input}
+                  type="text"
+                  value={isEditMode ? userData.lastName : user.lastName}
+                  onChange={(e) =>
+                    setUserData((prev) => ({
+                      ...prev,
+                      lastName: e.target.value,
+                    }))
+                  }
+                />
+              </label>
             </div>
             <div className={styles.fields_row}>
-              <div className={styles.field}>
+              <label className={styles.field}>
                 <div className={styles.filed_name}>Имя</div>
-                <input className={styles.filed_input} type="text" id="name"/>
-              </div>
+                <input
+                  readOnly={!isEditMode}
+                  className={styles.filed_input}
+                  type="text"
+                  value={isEditMode ? userData.firstName : user.firstName}
+                  onChange={(e) =>
+                    setUserData((prev) => ({
+                      ...prev,
+                      firstName: e.target.value,
+                    }))
+                  }
+                />
+              </label>
             </div>
             <div className={styles.fields_row}>
-              <div className={styles.field}>
+              <label className={styles.field}>
                 <div className={styles.filed_name}>Отчество</div>
-                <input className={styles.filed_input} type="text" id="last_name"/>
-              </div>
+                <input
+                  readOnly={!isEditMode}
+                  className={styles.filed_input}
+                  type="text"
+                  value={isEditMode ? userData.middleName : user.middleName}
+                  onChange={(e) =>
+                    setUserData((prev) => ({
+                      ...prev,
+                      middleName: e.target.value,
+                    }))
+                  }
+                />
+              </label>
             </div>
-            
-            
+
             <div className={styles.fields_row}>
-              <div className={styles.field}>
+              <label className={styles.field}>
                 <div className={styles.filed_name}>Дата рождения</div>
-                <input className={styles.filed_input} type="date" id="birth_date"/>
-              </div>
-              <div className={styles.field}>
+                <input
+                  readOnly={!isEditMode}
+                  className={styles.filed_input}
+                  type="date"
+                  value={
+                    new Date(isEditMode ? userData.birthDate : user.birthDate)
+                      .toISOString()
+                      .split("T")[0]
+                  }
+                  onChange={(e) =>
+                    setUserData((prev) => ({
+                      ...prev,
+                      birthDate: e.target.value,
+                    }))
+                  }
+                />
+              </label>
+              <label className={styles.field}>
                 <div className={styles.filed_name}>Год поступления</div>
-                <input className={styles.filed_input} type="number" id="admission_year"/>
-              </div>
+                <input
+                  readOnly={!isEditMode}
+                  className={styles.filed_input}
+                  type="number"
+                  value={
+                    isEditMode ? userData.admissionYear : user.admissionYear
+                  }
+                  onChange={(e) =>
+                    setUserData((prev) => ({
+                      ...prev,
+                      admissionYear: e.target.value,
+                    }))
+                  }
+                />
+              </label>
             </div>
           </div>
 
-
           <div className={styles.fields_colomn}>
             <div className={styles.fields_row}>
-              <div className={styles.field}>
+              <label className={styles.field}>
                 <div className={styles.filed_name}>Уровень образования</div>
-                <input className={styles.filed_input} type="text" id="name" value="Бакалавриат"/>
-              </div>
-              <div className={styles.field}>
-                <div className={styles.filed_name}>Форма обучения</div>
-                <input className={styles.filed_input} type="text" id="name" value="Очная"/>
-              </div>            
+                <input
+                  readOnly={!isEditMode}
+                  className={styles.filed_input}
+                  type="text"
+                  value={isEditMode ? userData.studentType : user.studentType}
+                  onChange={(e) =>
+                    setUserData((prev) => ({
+                      ...prev,
+                      studentType: e.target.value,
+                    }))
+                  }
+                />
+              </label>
             </div>
 
             <div className={styles.fields_row}>
-              <div className={styles.field}>
-                <div className={styles.filed_name}>Тип финансирования</div>
-                <input className={styles.filed_input} type="text" id="funding_type" value="Бюджет"/>
-              </div>
-            </div>
-
-            <div className={styles.fields_row}>
-              <div className={styles.field}>
+              <label className={styles.field}>
                 <div className={styles.filed_name}>Факультет</div>
-                <input className={styles.filed_input} type="text" id="faculty" value="Факультет компьютерных технологий и информатики"/>
-              </div>
+                <input
+                  readOnly={!isEditMode}
+                  className={styles.filed_input}
+                  type="text"
+                  value={isEditMode ? userData.faculty : user.faculty}
+                  onChange={(e) =>
+                    setUserData((prev) => ({
+                      ...prev,
+                      faculty: e.target.value,
+                    }))
+                  }
+                />
+              </label>
             </div>
             <div className={styles.fields_row}>
-              <div className={styles.field}>
-                <div className={styles.filed_name}>Код направления</div>
-                <input className={styles.filed_input} type="string" id="specialty_code" value="01.03.02"/>
-              </div>
-              <div className={styles.field}>
+              <label className={styles.field}>
                 <div className={styles.filed_name}>Направление</div>
-                <input className={styles.filed_input} type="string" id="specialty" value="Прикладная математика и информатика"/>
-              </div>
-              
-            </div>
-            <div className={styles.fields_row}>
-              <div className={styles.field}>
-                <div className={styles.filed_name}>Образовательная программа</div>
-                <input className={styles.filed_input} type="text" id="program_name" value="Математическое обеспечение программно-информационных систем"/>
-              </div>
+                <input
+                  readOnly={!isEditMode}
+                  className={styles.filed_input}
+                  type="string"
+                  value={isEditMode ? userData.programName : user.programName}
+                  onChange={(e) =>
+                    setUserData((prev) => ({
+                      ...prev,
+                      programName: e.target.value,
+                    }))
+                  }
+                />
+              </label>
             </div>
 
-
-            
-            
             <div className={styles.fields_row}>
-              <div className={styles.field}>
+              <label className={styles.field}>
                 <div className={styles.filed_name}>Курс</div>
-                <input className={styles.filed_input} type="number" id="course" value="3"/>
-              </div>
-              <div className={styles.field}>
+                <input
+                  readOnly={!isEditMode}
+                  className={styles.filed_input}
+                  type="number"
+                  id="course"
+                  value={isEditMode ? userData.course : user.course}
+                  onChange={(e) =>
+                    setUserData((prev) => ({
+                      ...prev,
+                      course: e.target.value,
+                    }))
+                  }
+                />
+              </label>
+              <label className={styles.field}>
                 <div className={styles.filed_name}>Группа</div>
-                <input className={styles.filed_input} type="number" id="group" value="2381"/>
-              </div>
-              <div className={styles.field}>
-                <div className={styles.filed_name}>Номер студенческого билета</div>
-                <input className={styles.filed_input} type="number" id="student_number" value="238108"/>
-              </div>
+                <input
+                  readOnly={!isEditMode}
+                  className={styles.filed_input}
+                  type="number"
+                  id="group"
+                  value={isEditMode ? userData.groupName : user.groupName}
+                  onChange={(e) =>
+                    setUserData((prev) => ({
+                      ...prev,
+                      groupName: e.target.value,
+                    }))
+                  }
+                />
+              </label>
             </div>
           </div>
         </div>
 
         <div>
           <div className={styles.avatar_block}>
-            <div className={styles.avatar}>*автарка*</div>
             <div className={styles.avatar_description}>
-              <div className={styles.avatar_fullname}>ФИО</div>
-              <div className={styles.avatar_group}>ГРУППА</div>
+              <div className={styles.avatar_fullname}>{getFullName(user)}</div>
+              <div className={styles.avatar_group}>
+                ГРУППА {isEditMode ? userData.groupName : user.groupName}
+              </div>
             </div>
-            <div className={styles.avatar_action_buttons}>
-                <div className={styles.avatar_action_button}>
-                  <CallIcon/>
-                </div>
-                <div className={styles.avatar_action_button}>
-                  <MailIcon/>
-                </div>
-                <div className={styles.avatar_action_button}>
-                  <MoreIcon/>
-                </div>
-            </div>
+            {/* <div className={styles.avatar_action_buttons}>
+              <div className={styles.avatar_action_button}>
+                <CallIcon />
+              </div>
+              <div className={styles.avatar_action_button}>
+                <MailIcon />
+              </div>
+              <div className={styles.avatar_action_button}>
+                <MoreIcon />
+              </div>
+            </div> */}
           </div>
         </div>
       </div>
     </div>
-
-/*
-    <div className={styles.main_block}>
-      <div className={styles.profile}>Профиль</div>
-      <div className={styles.horizontal_container}>
-        <div className={styles.horizontal_block}>
-          <div className={styles.form_field_block}>
-            <div><label for="name">ФИО</label></div>
-            <input type="text" className={styles.input_field} id="name"></input>
-          </div>
-        </div>
-        <div className={styles.horizontal_block}>блок2</div>
-      </div>
-    </div>
-*/
   );
 };
 
