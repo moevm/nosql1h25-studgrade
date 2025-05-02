@@ -69,10 +69,24 @@ const StatsMainPage = () => {
   return (
     <div className={styles.main}>
       <div className={styles.generals_buttons}>
-        <button className={styles.generals_buttons__button}>
+        <button
+          className={styles.generals_buttons__button}
+          onClick={() => {
+            // NOT IMPLEMENTED
+            alert("Export to Excel is not implemented yet.");
+            console.log("Export to Excel clicked");
+          }}
+        >
           <DownloadIcon /> Export to Excel
         </button>
-        <button className={styles.generals_buttons__button}>
+        <button
+          className={styles.generals_buttons__button}
+          onClick={() => {
+            // NOT IMPLEMENTED
+            alert("Import from Excel is not implemented yet.");
+            console.log("Import from Excel clicked");
+          }}
+        >
           <UploadIcon /> Load data
         </button>
       </div>
