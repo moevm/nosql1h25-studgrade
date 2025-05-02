@@ -1,5 +1,5 @@
 :root {
-  --group-subheader-color:#8E8E93;
+  --group-subheader-color: #8e8e93;
 }
 
 .main_block {
@@ -29,6 +29,8 @@
   border-radius: 3px;
   justify-content: center;
   align-items: center;
+  border: none;
+  cursor: pointer;
 }
 
 .icon_wrapper {
