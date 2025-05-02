@@ -7,7 +7,7 @@ info:
 
     **To get real RESTAPI start backend and visit [http://localhost:8000/api/docs](http://localhost:8000/api/docs)**
 servers:
-  - url: "http://localhost:8000/api"
+  - url: "http://localhost:8000"
 tags:
   - name: users
     description: Base users info
@@ -148,8 +148,12 @@ paths:
         - in: query
           name: student_type
           schema:
-            type: string
-            enum: [bachelor, master, aspirant, specialist]
+            type: array
+            items:
+              type: string
+              enum: [bachelor, master, aspirant, specialist]
+          style: form
+          explode: true
         - in: query
           name: course
           schema:
@@ -162,13 +166,21 @@ paths:
         - in: query
           name: faculty
           schema:
-            type: string
-            enum: [Math, Physics, IT]
+            type: array
+            items:
+              type: string
+              enum: [ФКТИ, ФИБС, ГФ]
+          style: form
+          explode: true
         - in: query
           name: group_name
           schema:
-            type: string
-            enum: ["2323", "1421", "3501"]
+            type: array
+            items:
+              type: string
+              enum: ["2323", "1421", "3501"]
+          style: form
+          explode: true
         - in: query
           name: limit
           schema:
