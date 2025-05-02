@@ -39,7 +39,7 @@ const StatsMainPage = () => {
     debouncedUserData,
     selectedStudentTypes,
   ]);
-  const { students, loading } = useStudents(studentsParams);
+  const { students, loading, error } = useStudents(studentsParams);
   console.log(studentsParams, students);
 
   const toggleFaculty = (faculty) => {
@@ -241,7 +241,16 @@ const StatsMainPage = () => {
               </tr>
             </tbody>
           )}
-          {!loading && students.length === 0 && (
+          {error && (
+            <tbody className={styles.info_table__body}>
+              <tr>
+                <td colSpan="6" className={styles.info_table__loading}>
+                  Ошибка загрузки данных. {error.message}
+                </td>
+              </tr>
+            </tbody>
+          )}
+          {!loading && !error && students.length === 0 && (
             <tbody className={styles.info_table__body}>
               <tr>
                 <td colSpan="6" className={styles.info_table__loading}>
