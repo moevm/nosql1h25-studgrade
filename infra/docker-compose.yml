@@ -13,6 +13,8 @@ services:
       - "8000:8000"
     depends_on:
       - mongo
+    environment:
+      CORS_ORIGINS: ${CORS_ORIGINS}
 
   mongo:
     image: mongo:6.0
