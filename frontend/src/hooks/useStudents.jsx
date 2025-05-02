@@ -23,7 +23,7 @@ export function useStudents(params = {}) {
     } finally {
       setLoading(false);
     }
-  }, [params]);
+  }, [JSON.stringify(params)]);
 
   useEffect(() => {
     fetchStudents();

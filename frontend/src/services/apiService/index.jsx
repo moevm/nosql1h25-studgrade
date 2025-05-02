@@ -8,6 +8,20 @@ const api = axios.create({
   headers: {
     "Content-Type": "application/json",
   },
+  paramsSerializer: (params) => {
+    const query = new URLSearchParams();
+    for (const key in params) {
+      const value = params[key];
+      if (Array.isArray(value)) {
+        value.forEach((val) => {
+          query.append(key, val);
+        });
+      } else if (value !== undefined && value !== null) {
+        query.append(key, value);
+      }
+    }
+    return query.toString();
+  },
 });
 
 api.interceptors.request.use((config) => {
@@ -30,7 +44,8 @@ export const bulkCreateUsers = (users) => api.post("/users/bulk", users);
 export const getStudents = (params) => api.get("/students", { params });
 export const getStudentById = (id) => api.get(`/students/${id}`);
 export const createStudent = (data) => api.post("/students", data);
-export const updateStudentById = (id, data) => api.patch(`/students/${id}`, data);
+export const updateStudentById = (id, data) =>
+  api.patch(`/students/${id}`, data);
 export const deleteStudentById = (id) => api.delete(`/students/${id}`);
 export const bulkCreateStudents = (students) =>
   api.post("/students/bulk", students);
@@ -47,7 +62,8 @@ export const bulkCreateLogs = (logs) => api.post("/logs/bulk", logs);
 export const getTeachers = (params) => api.get("/teachers", { params });
 export const getTeacherById = (id) => api.get(`/teachers/${id}`);
 export const createTeacher = (data) => api.post("/teachers", data);
-export const updateTeacherById = (id, data) => api.patch(`/teachers/${id}`, data);
+export const updateTeacherById = (id, data) =>
+  api.patch(`/teachers/${id}`, data);
 export const deleteTeacherById = (id) => api.delete(`/teachers/${id}`);
 export const bulkCreateTeachers = (teachers) =>
   api.post("/teachers/bulk", teachers);
@@ -56,7 +72,8 @@ export const bulkCreateTeachers = (teachers) =>
 export const getSubjects = (params) => api.get("/subjects", { params });
 export const getSubjectById = (id) => api.get(`/subjects/${id}`);
 export const createSubject = (data) => api.post("/subjects", data);
-export const updateSubjectById = (id, data) => api.patch(`/subjects/${id}`, data);
+export const updateSubjectById = (id, data) =>
+  api.patch(`/subjects/${id}`, data);
 export const deleteSubjectById = (id) => api.delete(`/subjects/${id}`);
 export const bulkCreateSubjects = (subjects) =>
   api.post("/subjects/bulk", subjects);

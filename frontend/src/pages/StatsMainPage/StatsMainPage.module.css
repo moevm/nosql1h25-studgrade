@@ -179,6 +179,27 @@
   cursor: pointer;
 }
 
+.field {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  font-size: 0.875rem;
+}
+
+.filed_input {
+  background-color: var(--body-background-color);
+  border-radius: 3px;
+  border: 0;
+  font-family: Roboto, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+    Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+  font-size: 0.875rem;
+  outline: none;
+  padding: 3px;
+  width: 100%;
+}
+
 .info {
   grid: info;
   display: flex;
@@ -213,6 +234,13 @@
 }
 
 .info_table__body {
+}
+
+.info_table__loading {
+  /* text-align: center; */
+  padding: 24px;
+
+  font-size: 1.25rem;
 }
 
 .info_table__row > td:first-child {
