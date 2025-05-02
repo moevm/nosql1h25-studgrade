@@ -6,3 +6,5 @@ services:
       dockerfile: Dockerfile.prod
     ports:
       - "127.0.0.1:5173:80"
+    args:
+      VITE_API_URL: ${VITE_API_URL}
