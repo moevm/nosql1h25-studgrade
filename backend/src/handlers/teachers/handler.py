@@ -3,7 +3,7 @@ from fastapi import APIRouter, HTTPException, Query, status
 from bson import ObjectId
 from pydantic import TypeAdapter
 
-from src.schemas.teachers import Teacher, TeacherWithUser
+from src.schemas.teachers import Teacher, TeacherWithUser, TeacherBulkCreateResponse
 from src.db import db
 
 
@@ -115,3 +115,21 @@ async def delete_teacher(teacher_id: str):
     result = await db.teachers.delete_one({"_id": ObjectId(teacher_id)})
     if result.deleted_count == 0:
         raise HTTPException(404, "Teacher not found")
+
+@router.post(
+    "/bulk/",
+    response_model=TeacherBulkCreateResponse,
+    status_code=status.HTTP_201_CREATED,
+    summary="Bulk create teachers",
+    tags=["teachers", "bulk"]
+)
+async def bulk_create_teachers(teachers: list[Teacher]):
+    try:
+        teachers_dicts = [teacher.model_dump(by_alias=True, exclude_none=True, exclude={"id"}) for teacher in teachers]
+        result = await db.teachers.insert_many(teachers_dicts)
+        return TeacherBulkCreateResponse(inserted_ids=[str(id) for id in result.inserted_ids])
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Bulk create operation failed: {str(e)}"
+        )

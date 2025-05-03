@@ -4,7 +4,7 @@ from .handlers.subjects.handler import router as subjects_router
 from .handlers.students.handler import router as students_router
 from .handlers.teachers.handler import router as teachers_router
 from .handlers.logs.handler import router as log_router
-
+from .handlers.users.handler import router as users_bulk_router
 
 app = FastAPI()
 
@@ -30,6 +30,12 @@ app.include_router(
     log_router,
     prefix="/logs",
     tags=["logs"]
+)
+
+app.include_router(
+    users_bulk_router,
+    prefix="/users",
+    tags=["users"]
 )
 
 if __name__ == "__main__":

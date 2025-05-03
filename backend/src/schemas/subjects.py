@@ -71,3 +71,7 @@ class SubjectMeta(BaseModel):
     name: str
     description: Optional[str] = None
     stats: Optional[List[SubjectStatModel]] = None
+
+
+class SubjectBulkCreateResponse(BaseModel):
+    inserted_ids: List[str]

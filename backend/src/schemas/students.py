@@ -119,3 +119,6 @@ class StudentWithStatistic(Student):
     )
 
     stats: Optional[List[SubjectStatModel]] = Field(None, alias="stats")
+
+class StudentBulkCreateResponse(BaseModel):
+    inserted_ids: List[str]

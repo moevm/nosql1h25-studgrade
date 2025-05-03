@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException, Query, status
-from typing import Optional, List, Literal
-from src.schemas.logs import LogModel, LogCreate, LogUpdate
+from typing import Optional, Literal
+from src.schemas.logs import LogModel, LogCreate, LogUpdate, LogBulkCreateResponse
 from src.db import db
 from bson import ObjectId
 from pydantic import TypeAdapter
@@ -9,7 +9,7 @@ from datetime import date
 router = APIRouter()
 
 
-@router.get("/", response_model=List[LogModel])
+@router.get("/", response_model=list[LogModel])
 async def get_all_logs(
         limit: Optional[int] = Query(10, gt=0),
         offset: Optional[int] = Query(0, ge=0),
@@ -42,7 +42,7 @@ async def get_all_logs(
     for log in logs:
         log["_id"] = str(log["_id"])
 
-    adapter = TypeAdapter(List[LogModel])
+    adapter = TypeAdapter(list[LogModel])
     return adapter.validate_python(logs)
 
 
@@ -110,3 +110,28 @@ async def delete_log(log_id: str):
     result = await db.logs.delete_one({"_id": ObjectId(log_id)})
     if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail="Log not found")
+
+
+@router.post(
+    "/bulk/",
+    response_model=LogBulkCreateResponse,
+    status_code=status.HTTP_201_CREATED,
+    summary="Bulk create logs",
+    tags=["logs", "bulk"]
+)
+async def bulk_create_logs(logs: list[LogCreate]):
+    try:
+        logs_dicts = []
+        for log in logs:
+            log_dict = log.model_dump(by_alias=True, exclude_none=True)
+            if isinstance(log_dict.get("action_date"), date):
+                log_dict["action_date"] = log_dict["action_date"].isoformat()
+            logs_dicts.append(log_dict)
+
+        result = await db.logs.insert_many(logs_dicts)
+        return LogBulkCreateResponse(inserted_ids=[str(id) for id in result.inserted_ids])
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Bulk create operation failed: {str(e)}"
+        )

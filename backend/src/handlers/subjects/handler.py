@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException, Query, status
 from typing import Optional, List, Literal
-from src.schemas.subjects import SubjectMeta, SubjectStatModel, PyObjectId
+from src.schemas.subjects import SubjectMeta, SubjectStatModel, PyObjectId, SubjectBulkCreateResponse
 from src.db import db
 from bson import ObjectId
 from pydantic import TypeAdapter
@@ -88,3 +88,23 @@ async def delete_subject(subject_id: str):
     result = await db.subjects.delete_one({"_id": ObjectId(subject_id)})
     if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail="Subject not found")
+
+
+@router.post(
+    "/bulk/",
+    response_model=SubjectBulkCreateResponse,
+    status_code=status.HTTP_201_CREATED,
+    summary="Bulk create subjects",
+    tags=["subjects", "bulk"]
+)
+async def bulk_create_subjects(subjects: list[SubjectMeta]):
+    try:
+        subjects_dicts = [subject.model_dump(by_alias=True, exclude_none=True, exclude={"id"})
+                          for subject in subjects]
+        result = await db.subjects.insert_many(subjects_dicts)
+        return SubjectBulkCreateResponse(inserted_ids=[str(id) for id in result.inserted_ids])
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Bulk create operation failed: {str(e)}"
+        )
