@@ -4,30 +4,28 @@ from datetime import datetime, date
 from bson import ObjectId
 from pydantic import TypeAdapter
 
-from src.schemas.students import Student, StudentWithStatistic
+from src.schemas.students import Student, StudentWithStatistic, StudentBulkCreateResponse
 from src.db import db
-
 
 router = APIRouter()
 
 
 @router.get("/", response_model=List[StudentWithStatistic])
 async def get_all_students(
-    first_name: Optional[str] = Query(None),
-    last_name: Optional[str] = Query(None),
-    birth_date: Optional[str] = Query(None, examples={"date": {"summary": "YYYY-MM-DD"}}),
-    admission_year: Optional[int] = Query(None, ge=1900, le=2100),
-    student_type: Optional[Literal["bachelor", "master", "aspirant", "specialist"]] = Query(None),
-    course: Optional[int] = Query(None, ge=1),
-    program_name: Optional[str] = Query(None),
-    faculty: Optional[str] = Query(None),
-    group_name: Optional[str] = Query(None),
-    limit: Optional[int] = Query(10, gt=0),
-    offset: Optional[int] = Query(0, ge=0),
-    sort_by: Optional[str] = Query("last_name"),
-    order: Optional[Literal["asc", "desc"]] = Query("asc"),
+        first_name: Optional[str] = Query(None),
+        last_name: Optional[str] = Query(None),
+        birth_date: Optional[str] = Query(None, examples={"date": {"summary": "YYYY-MM-DD"}}),
+        admission_year: Optional[int] = Query(None, ge=1900, le=2100),
+        student_type: Optional[Literal["bachelor", "master", "aspirant", "specialist"]] = Query(None),
+        course: Optional[int] = Query(None, ge=1),
+        program_name: Optional[str] = Query(None),
+        faculty: Optional[str] = Query(None),
+        group_name: Optional[str] = Query(None),
+        limit: Optional[int] = Query(10, gt=0),
+        offset: Optional[int] = Query(0, ge=0),
+        sort_by: Optional[str] = Query("last_name"),
+        order: Optional[Literal["asc", "desc"]] = Query("asc"),
 ):
-
     query: dict = {}
     if first_name:
         query["first_name"] = {"$regex": first_name, "$options": "i"}
@@ -135,3 +133,29 @@ async def delete_student(student_id: str):
     result = await db.students.delete_one({"_id": ObjectId(student_id)})
     if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail="Student not found")
+
+
+@router.post(
+    "/bulk/",
+    response_model=StudentBulkCreateResponse,
+    status_code=status.HTTP_201_CREATED,
+    summary="Bulk create students",
+    tags=["students", "bulk"]
+)
+async def bulk_create_students(students: List[Student]):
+    try:
+        students_dicts = [student.model_dump(by_alias=True, exclude_none=True, exclude={"id"})
+                          for student in students]
+
+        for student in students_dicts:
+            if "birthDate" in student and isinstance(student["birthDate"], date):
+                student["birthDate"] = student["birthDate"].isoformat()
+
+        result = await db.students.insert_many(students_dicts)
+        return StudentBulkCreateResponse(inserted_ids=[str(id) for id in result.inserted_ids])
+
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Bulk create operation failed: {str(e)}"
+        )

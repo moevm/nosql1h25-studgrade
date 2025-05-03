@@ -51,6 +51,12 @@ class LogCreate(BaseModel):
     description: str
     role: str
 
+    model_config = ConfigDict(
+        json_encoders={
+            date: lambda v: v.isoformat()
+        }
+    )
+
 
 class LogUpdate(BaseModel):
     user_id: Optional[PyObjectId] = None
@@ -61,3 +67,6 @@ class LogUpdate(BaseModel):
     entity_id: Optional[PyObjectId] = None
     description: Optional[str] = None
     role: Optional[str] = None
+
+class LogBulkCreateResponse(BaseModel):
+    inserted_ids: list[str]

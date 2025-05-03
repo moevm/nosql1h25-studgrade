@@ -88,3 +88,6 @@ class TeacherWithUser(Teacher):
     )
 
     user: Optional[UserModel] = None
+
+class TeacherBulkCreateResponse(BaseModel):
+    inserted_ids: list[str]
