@@ -1,10 +1,14 @@
 from typing import Optional, List, Literal
+from datetime import date
 from fastapi import APIRouter, HTTPException, Query, status
-from datetime import datetime, date
 from bson import ObjectId
 from pydantic import TypeAdapter
 
-from src.schemas.students import Student, StudentWithStatistic, StudentBulkCreateResponse
+from src.schemas.students import (
+    Student,
+    StudentWithStatistic,
+    StudentBulkCreateResponse,
+)
 from src.db import db
 
 router = APIRouter()
@@ -12,39 +16,46 @@ router = APIRouter()
 
 @router.get("/", response_model=List[StudentWithStatistic])
 async def get_all_students(
-        first_name: Optional[str] = Query(None),
-        last_name: Optional[str] = Query(None),
-        birth_date: Optional[str] = Query(None, examples={"date": {"summary": "YYYY-MM-DD"}}),
-        admission_year: Optional[int] = Query(None, ge=1900, le=2100),
-        student_type: Optional[Literal["bachelor", "master", "aspirant", "specialist"]] = Query(None),
-        course: Optional[int] = Query(None, ge=1),
-        program_name: Optional[str] = Query(None),
-        faculty: Optional[str] = Query(None),
-        group_name: Optional[str] = Query(None),
-        limit: Optional[int] = Query(10, gt=0),
-        offset: Optional[int] = Query(0, ge=0),
-        sort_by: Optional[str] = Query("last_name"),
-        order: Optional[Literal["asc", "desc"]] = Query("asc"),
+    first_name: Optional[str] = Query(None),
+    last_name: Optional[str] = Query(None),
+    birth_date: Optional[str] = Query(None, examples={"date": {"summary": "YYYY-MM-DD"}}),
+    admission_year: Optional[int] = Query(None, ge=1900, le=2100),
+    student_type: Optional[List[Literal["bachelor", "master", "aspirant", "specialist"]]] = Query(None),
+    course: Optional[int] = Query(None, ge=1),
+    program_name: Optional[str] = Query(None),
+    faculty: Optional[List[Literal["ФКТИ", "ФИБС", "ГФ"]]] = Query(None),
+    group_name: Optional[List[Literal["2323", "1421", "3501"]]] = Query(None),
+    limit: Optional[int] = Query(10, gt=0),
+    offset: Optional[int] = Query(0, ge=0),
+    sort_by: Optional[str] = Query("last_name"),
+    order: Optional[Literal["asc", "desc"]] = Query("asc"),
 ):
-    query: dict = {}
+    query = {}
     if first_name:
-        query["first_name"] = {"$regex": first_name, "$options": "i"}
+        query["firstName"] = {"$regex": first_name, "$options": "i"}
+
     if last_name:
-        query["last_name"] = {"$regex": last_name, "$options": "i"}
+        query["lastName"] = {"$regex": last_name, "$options": "i"}
+
     if birth_date:
-        query["birth_date"] = birth_date
+        query["birthDate"] = birth_date
+
     if admission_year is not None:
-        query["admission_year"] = admission_year
+        query["admissionYear"] = admission_year
+
     if student_type:
-        query["student_type"] = student_type
+        query["studentType"] = {"$in": student_type}
+
     if course is not None:
         query["course"] = course
     if program_name:
-        query["program_name"] = program_name
+        query["programName"] = program_name
+
     if faculty:
-        query["faculty"] = faculty
+        query["faculty"] = {"$in": faculty}
+
     if group_name:
-        query["group_name"] = group_name
+        query["groupName"] = {"$in": group_name}
 
     allowed_sort_fields = [
         "first_name",
@@ -79,10 +90,10 @@ async def create_student(student: Student):
     try:
         student_dict = student.model_dump(by_alias=True, exclude={"id"})
 
-        # ──➤ приводим birthDate к datetime.datetime
+        # Convert birthDate (date) to ISO 8601 string for MongoDB
         bd = student_dict.get("birthDate")
         if isinstance(bd, date):
-            student_dict["birthDate"] = datetime.combine(bd, datetime.min.time())
+            student_dict["birthDate"] = bd.isoformat()
 
         result = await db.students.insert_one(student_dict)
         created = await db.students.find_one({"_id": result.inserted_id})
@@ -117,6 +128,9 @@ async def update_student(student_id: str, student: Student):
 
     update_data = student.model_dump(by_alias=True, exclude_unset=True)
     if update_data:
+        if "birthDate" in update_data and isinstance(update_data["birthDate"], date):
+            update_data["birthDate"] = update_data["birthDate"].isoformat()
+
         await db.students.update_one({"_id": ObjectId(student_id)}, {"$set": update_data})
 
     updated = await db.students.find_one({"_id": ObjectId(student_id)})
@@ -140,12 +154,14 @@ async def delete_student(student_id: str):
     response_model=StudentBulkCreateResponse,
     status_code=status.HTTP_201_CREATED,
     summary="Bulk create students",
-    tags=["students", "bulk"]
+    tags=["students", "bulk"],
 )
 async def bulk_create_students(students: List[Student]):
     try:
-        students_dicts = [student.model_dump(by_alias=True, exclude_none=True, exclude={"id"})
-                          for student in students]
+        students_dicts = [
+            student.model_dump(by_alias=True, exclude_none=True, exclude={"id"})
+            for student in students
+        ]
 
         for student in students_dicts:
             if "birthDate" in student and isinstance(student["birthDate"], date):
@@ -157,5 +173,5 @@ async def bulk_create_students(students: List[Student]):
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Bulk create operation failed: {str(e)}"
+            detail=f"Bulk create operation failed: {str(e)}",
         )

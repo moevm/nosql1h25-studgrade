@@ -28,7 +28,7 @@ class PyObjectId(str):
 
 
 try:
-    from src.schemas.subjects import SubjectStatModel  # type: ignore
+    from src.schemas.subjects import SubjectStatModel
 except ImportError:
     class SubjectStatModel(BaseModel):
         subject_id: PyObjectId
@@ -50,14 +50,14 @@ class Student(BaseModel):
         arbitrary_types_allowed=True,
         json_schema_extra={
             "example": {
-                "firstName": "Иван",
-                "lastName": "Иванов",
-                "birthDate": "2005-09-14",
+                "firstName": "Анна",
+                "lastName": "Смирнова",
+                "birthDate": "2005-02-11",
                 "admissionYear": 2023,
                 "studentType": "bachelor",
-                "course": 2,
+                "course": 1,
                 "programName": "Computer science",
-                "faculty": "IT",
+                "faculty": "ФКТИ",
                 "groupName": "2323"
             }
         },
@@ -68,7 +68,7 @@ class Student(BaseModel):
     first_name: str = Field(..., alias="firstName")
     last_name: str = Field(..., alias="lastName")
     birth_date: date = Field(..., alias="birthDate")
-    admission_year: int = Field(..., alias="admissionYear", ge=1900, le=date.today().year)
+    admission_year: int = Field(..., alias="admissionYear", ge=1900)
 
     student_type: Literal["bachelor", "master", "aspirant", "specialist"] = Field(
         ..., alias="studentType"
@@ -77,31 +77,24 @@ class Student(BaseModel):
     course: int = Field(..., ge=1, le=6)
 
     program_name: Literal[
-        "Theoretical math",
-        "Applied physics",
-        "Computer science",
+        "Theoretical math", "Applied physics", "Computer science"
     ] = Field(..., alias="programName")
 
-    faculty: Literal["Math", "Physics", "IT"]
+    faculty: Literal["ФКТИ", "ФИБС", "ГФ"]
+
     group_name: Literal["2323", "1421", "3501"] = Field(..., alias="groupName")
 
 
 class StudentWithStatistic(Student):
+
+    stats: Optional[List[SubjectStatModel]] = Field(None, alias="stats")
 
     model_config = ConfigDict(
         populate_by_name=True,
         arbitrary_types_allowed=True,
         json_schema_extra={
             "example": {
-                "firstName": "Иван",
-                "lastName": "Иванов",
-                "birthDate": "2005-09-14",
-                "admissionYear": 2023,
-                "studentType": "bachelor",
-                "course": 2,
-                "programName": "Computer science",
-                "faculty": "IT",
-                "groupName": "2323",
+                **Student.model_config["json_schema_extra"]["example"],
                 "stats": [
                     {
                         "subjectId": "5f8d8f9d8f9d8f9d8f9d8f9d",
@@ -118,7 +111,6 @@ class StudentWithStatistic(Student):
         },
     )
 
-    stats: Optional[List[SubjectStatModel]] = Field(None, alias="stats")
 
 class StudentBulkCreateResponse(BaseModel):
     inserted_ids: List[str]
