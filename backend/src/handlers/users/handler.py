@@ -4,7 +4,7 @@ from bson import ObjectId
 from pydantic import TypeAdapter
 
 from src.db import db
-from src.schemas.user import User, UserBulkCreateResponse
+from src.schemas.user import User, UserBulkCreateResponse, UserUpdate
 
 router = APIRouter()
 
@@ -69,6 +69,7 @@ async def get_all_users(
 async def create_user(user: User):
     try:
         user_dict = user.model_dump(by_alias=True, exclude={"id"})
+        user_dict["role"] = "student"
         result = await db.users.insert_one(user_dict)
         created = await db.users.find_one({"_id": result.inserted_id})
         created["_id"] = str(created["_id"])
@@ -91,7 +92,7 @@ async def get_user(user_id: str):
 
 
 @router.patch("/{user_id}", response_model=User)
-async def update_user(user_id: str, user: User):
+async def update_user(user_id: str, user: UserUpdate):
     if not ObjectId.is_valid(user_id):
         raise HTTPException(status_code=400, detail="Invalid user ID")
 
@@ -100,8 +101,17 @@ async def update_user(user_id: str, user: User):
         raise HTTPException(status_code=404, detail="User not found")
 
     update_data = user.model_dump(by_alias=True, exclude_unset=True)
-    if update_data:
-        await db.users.update_one({"_id": ObjectId(user_id)}, {"$set": update_data})
+
+    if not update_data:
+        raise HTTPException(
+            status_code=400,
+            detail="No update data provided"
+        )
+
+    await db.users.update_one(
+        {"_id": ObjectId(user_id)},
+        {"$set": update_data}
+    )
 
     updated = await db.users.find_one({"_id": ObjectId(user_id)})
     updated["_id"] = str(updated["_id"])

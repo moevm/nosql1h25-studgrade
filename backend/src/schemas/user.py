@@ -51,8 +51,25 @@ class User(BaseModel):
 
     login: str
     email: EmailStr
-    role: Literal["student", "teacher", "admin"]
+    role: Literal["student", "teacher", "admin"] = Field(
+        "student", description="User role; defaults to student"
+    )
 
 
 class UserBulkCreateResponse(BaseModel):
     inserted_ids: List[str]
+
+
+class UserUpdate(BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+        arbitrary_types_allowed=True,
+        extra="forbid"  # Запрещает неизвестные поля
+    )
+
+    first_name: Optional[str] = Field(None, alias="firstName")
+    middle_name: Optional[str] = Field(None, alias="middleName")
+    last_name: Optional[str] = Field(None, alias="lastName")
+    login: Optional[str] = None
+    email: Optional[EmailStr] = None
+    role: Optional[Literal["student", "teacher", "admin"]] = None
