@@ -1,22 +1,58 @@
-from typing import Optional, List
-from pydantic import BaseModel, ConfigDict, Field, StrictBool
-from .PyObjectID import PyObjectId
+from pydantic import BaseModel, ConfigDict, Field, EmailStr
+from typing import Optional, Literal, List
+from bson import ObjectId
+from pydantic_core import core_schema
 
-class UserModel(BaseModel):
-    id: Optional[PyObjectId] = Field(alias="_id", default=None)  # Делаем поле необязательным
-    email: str
-    login: str
-    password_hash: str
-    first_name: str
-    middle_name: str
-    last_name: str
-    active: StrictBool
-    role: str
+
+class PyObjectId(str):
+
+    @classmethod
+    def __get_pydantic_core_schema__(cls, _source_type, _handler):
+        def validate(value):
+            if isinstance(value, ObjectId):
+                return str(value)
+            if isinstance(value, str):
+                try:
+                    ObjectId(value)
+                    return value
+                except Exception:
+                    raise ValueError("Invalid ObjectId")
+            raise ValueError("Must be ObjectId or str")
+
+        return core_schema.no_info_after_validator_function(
+            validate,
+            core_schema.str_schema(),
+            serialization=core_schema.to_string_ser_schema(),
+        )
+
+
+class User(BaseModel):
 
     model_config = ConfigDict(
         populate_by_name=True,
-        arbitrary_types_allowed=True  # Добавляем для работы с PyObjectId
+        arbitrary_types_allowed=True,
+        json_schema_extra={
+            "example": {
+                "firstName": "Olga",
+                "middleName": "Ivanovna",
+                "lastName": "Sidorova",
+                "login": "o.sidorova",
+                "email": "o.sidorova@example.com",
+                "role": "teacher"
+            }
+        },
     )
+
+    id: Optional[PyObjectId] = Field(None, alias="_id")
+
+    first_name: str = Field(..., alias="firstName")
+    middle_name: Optional[str] = Field(None, alias="middleName")
+    last_name: str = Field(..., alias="lastName")
+
+    login: str
+    email: EmailStr
+    role: Literal["student", "teacher", "admin"]
+
 
 class UserBulkCreateResponse(BaseModel):
     inserted_ids: List[str]
