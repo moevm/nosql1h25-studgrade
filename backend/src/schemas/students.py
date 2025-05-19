@@ -1,5 +1,6 @@
 from pydantic import BaseModel, ConfigDict, Field
-from typing import Optional, List, Literal
+from typing import Optional, List, Literal, TYPE_CHECKING
+
 from datetime import date
 from bson import ObjectId
 from pydantic_core import core_schema
@@ -8,7 +9,7 @@ from pydantic_core import core_schema
 class PyObjectId(str):
 
     @classmethod
-    def __get_pydantic_core_schema__(cls, _source_type, _handler):
+    def __get_pydantic_core_schema__(cls, _s, _h):
         def validate(value):
             if isinstance(value, ObjectId):
                 return str(value)
@@ -16,8 +17,8 @@ class PyObjectId(str):
                 try:
                     ObjectId(value)
                     return value
-                except Exception:
-                    raise ValueError("Invalid ObjectId")
+                except Exception as exc:  # noqa: BLE001
+                    raise ValueError("Invalid ObjectId") from exc
             raise ValueError("Must be ObjectId or str")
 
         return core_schema.no_info_after_validator_function(
@@ -27,23 +28,8 @@ class PyObjectId(str):
         )
 
 
-try:
-    from src.schemas.subjects import SubjectStatModel
-except ImportError:
-    class SubjectStatModel(BaseModel):
-        subject_id: PyObjectId
-        total_lessons: int
-        attendance_lessons: int
-        year: int
-        season: Literal["autumn", "spring"]
-        prediction_score: float
-        score: float
-        grade_value: Optional[Literal["pass", "fail", "5", "4", "3"]]
-
-        model_config = ConfigDict(populate_by_name=True)
-
-
 class Student(BaseModel):
+    """Core student document (without statistics)."""
 
     model_config = ConfigDict(
         populate_by_name=True,
@@ -58,12 +44,15 @@ class Student(BaseModel):
                 "course": 1,
                 "programName": "Computer science",
                 "faculty": "ФКТИ",
-                "groupName": "2323"
+                "groupName": "2323",
+                "userId": "5f8e9f9e9f9e9f9e9f9e9f9e",
             }
         },
     )
 
     id: Optional[PyObjectId] = Field(None, alias="_id")
+
+    user_id: Optional[PyObjectId] = Field(None, alias="userId")
 
     first_name: str = Field(..., alias="firstName")
     last_name: str = Field(..., alias="lastName")
@@ -77,7 +66,9 @@ class Student(BaseModel):
     course: int = Field(..., ge=1, le=6)
 
     program_name: Literal[
-        "Theoretical math", "Applied physics", "Computer science"
+        "Theoretical math",
+        "Applied physics",
+        "Computer science",
     ] = Field(..., alias="programName")
 
     faculty: Literal["ФКТИ", "ФИБС", "ГФ"]
@@ -85,10 +76,14 @@ class Student(BaseModel):
     group_name: Literal["2323", "1421", "3501"] = Field(..., alias="groupName")
 
 
+if TYPE_CHECKING:
+    from src.schemas.subjects import SubjectStatModel
+else:
+    SubjectStatModel = "SubjectStatModel"  # type: ignore[assignment]
+
+
 class StudentWithStatistic(Student):
-
-    stats: Optional[List[SubjectStatModel]] = Field(None, alias="stats")
-
+    stats: Optional[List["SubjectStatModel"]] = Field(None, alias="stats")
     model_config = ConfigDict(
         populate_by_name=True,
         arbitrary_types_allowed=True,
@@ -104,9 +99,9 @@ class StudentWithStatistic(Student):
                         "season": "autumn",
                         "predictionScore": 4.7,
                         "score": 4.5,
-                        "gradeValue": "5"
+                        "gradeValue": "5",
                     }
-                ]
+                ],
             }
         },
     )
