@@ -10,6 +10,48 @@ from src.utils.security import generate_random_password, hash_password
 router = APIRouter()
 
 
+
+@router.get("/", response_model=List[TeacherWithUser])
+async def get_all_teachers(
+    first_name: Optional[str] = Query(None, alias="first_name"),
+    middle_name: Optional[str] = Query(None, alias="middle_name"),
+    last_name: Optional[str] = Query(None, alias="last_name"),
+    limit: Optional[int] = Query(10, gt=0),
+    offset: Optional[int] = Query(0, ge=0),
+    sort_by: Optional[str] = Query("lastName"),
+    order: Optional[Literal["asc", "desc"]] = Query("asc"),
+):
+
+    query: dict = {}
+    if first_name:
+        query["firstName"] = {"$regex": first_name, "$options": "i"}
+    if middle_name:
+        query["middleName"] = {"$regex": middle_name, "$options": "i"}
+    if last_name:
+        query["lastName"] = {"$regex": last_name, "$options": "i"}
+
+    sort_order = 1 if order == "asc" else -1
+    allowed_sort_fields = ["firstName", "middleName", "lastName", "createdAt"]
+    sort_field = sort_by if sort_by in allowed_sort_fields else "lastName"
+
+    cursor = (
+        db.teachers
+        .find(query)
+        .sort(sort_field, sort_order)
+        .skip(offset)
+        .limit(limit)
+    )
+
+    teachers = await cursor.to_list(length=None)
+    for t in teachers:
+        t["_id"] = str(t["_id"])
+        if "userId" in t and isinstance(t["userId"], ObjectId):
+            t["userId"] = str(t["userId"])
+
+    adapter = TypeAdapter(List[TeacherWithUser])
+    return adapter.validate_python(teachers)
+
+
 @router.post("/", response_model=TeacherWithUser, status_code=status.HTTP_201_CREATED)
 async def create_teacher(teacher: Teacher):
     try:
@@ -31,6 +73,22 @@ async def create_teacher(teacher: Teacher):
 
     except Exception as e:
         raise HTTPException(500, f"Database operation failed: {e}")
+
+
+@router.get("/{teacher_id}", response_model=TeacherWithUser)
+async def get_teacher(teacher_id: str):
+    if not ObjectId.is_valid(teacher_id):
+        raise HTTPException(400, "Invalid teacher ID")
+
+    teacher = await db.teachers.find_one({"_id": ObjectId(teacher_id)})
+    if not teacher:
+        raise HTTPException(404, "Teacher not found")
+
+    teacher["_id"] = str(teacher["_id"])
+    if "userId" in teacher and isinstance(teacher["userId"], ObjectId):
+        teacher["userId"] = str(teacher["userId"])
+
+    return TypeAdapter(TeacherWithUser).validate_python(teacher)
 
 
 @router.patch("/{teacher_id}", response_model=TeacherWithUser)
@@ -81,31 +139,31 @@ async def delete_teacher(teacher_id: str):
                 await db.teachers.delete_one({"_id": ObjectId(teacher_id)}, session=s)
                 await db.users.delete_one({"_id": teacher["userId"]}, session=s)
 
-    @router.post(
-        "/bulk/",
-        response_model=TeacherBulkCreateResponse,
-        status_code=status.HTTP_201_CREATED,
-        tags=["teachers", "bulk"],
-    )
-    async def bulk_create_teachers(teachers: List[Teacher]):
-        try:
-            teachers_dicts = []
+@router.post(
+    "/bulk/",
+    response_model=TeacherBulkCreateResponse,
+    status_code=status.HTTP_201_CREATED,
+    tags=["teachers", "bulk"],
+)
+async def bulk_create_teachers(teachers: List[Teacher]):
+    try:
+        teachers_dicts = []
 
-            async with await db.client.start_session() as s:
-                async with s.start_transaction():
-                    for t in teachers:
-                        user_id, _ = await _create_linked_user(t)
+        async with await db.client.start_session() as s:
+            async with s.start_transaction():
+                for t in teachers:
+                    user_id, _ = await _create_linked_user(t)
 
-                        d = t.model_dump(by_alias=True, exclude={"id", "user_id"})
-                        d["userId"] = ObjectId(user_id)
-                        teachers_dicts.append(d)
+                    d = t.model_dump(by_alias=True, exclude={"id", "user_id"})
+                    d["userId"] = ObjectId(user_id)
+                    teachers_dicts.append(d)
 
-                    result = await db.teachers.insert_many(teachers_dicts, session=s)
+                result = await db.teachers.insert_many(teachers_dicts, session=s)
 
-            return TeacherBulkCreateResponse(inserted_ids=[str(i) for i in result.inserted_ids])
+        return TeacherBulkCreateResponse(inserted_ids=[str(i) for i in result.inserted_ids])
 
-        except Exception as e:
-            raise HTTPException(500, f"Bulk create failed: {e}")
+    except Exception as e:
+        raise HTTPException(500, f"Bulk create failed: {e}")
 
 
 def _generate_login(first_name: str, last_name: str) -> str:

@@ -15,6 +15,77 @@ from src.db import db
 router = APIRouter()
 
 
+@router.get("/", response_model=List[StudentWithStatistic])
+async def get_all_students(
+    first_name: Optional[str] = Query(None),
+    last_name: Optional[str] = Query(None),
+    birth_date: Optional[str] = Query(None, examples={"date": {"summary": "YYYY-MM-DD"}}),
+    admission_year: Optional[int] = Query(None, ge=1900, le=2100),
+    student_type: Optional[List[Literal["bachelor", "master", "aspirant", "specialist"]]] = Query(None),
+    course: Optional[int] = Query(None, ge=1),
+    program_name: Optional[str] = Query(None),
+    faculty: Optional[List[Literal["ФКТИ", "ФИБС", "ГФ"]]] = Query(None),
+    group_name: Optional[List[Literal["2323", "1421", "3501"]]] = Query(None),
+    limit: Optional[int] = Query(10, gt=0),
+    offset: Optional[int] = Query(0, ge=0),
+    sort_by: Optional[str] = Query("last_name"),
+    order: Optional[Literal["asc", "desc"]] = Query("asc"),
+):
+    query = {}
+    if first_name:
+        query["firstName"] = {"$regex": first_name, "$options": "i"}
+
+    if last_name:
+        query["lastName"] = {"$regex": last_name, "$options": "i"}
+
+    if birth_date:
+        query["birthDate"] = birth_date
+
+    if admission_year is not None:
+        query["admissionYear"] = admission_year
+
+    if student_type:
+        query["studentType"] = {"$in": student_type}
+
+    if course is not None:
+        query["course"] = course
+    if program_name:
+        query["programName"] = program_name
+
+    if faculty:
+        query["faculty"] = {"$in": faculty}
+
+    if group_name:
+        query["groupName"] = {"$in": group_name}
+
+    allowed_sort_fields = [
+        "first_name",
+        "last_name",
+        "birth_date",
+        "admission_year",
+        "student_type",
+        "course",
+        "program_name",
+        "faculty",
+        "group_name",
+    ]
+    sort_field = sort_by if sort_by in allowed_sort_fields else "last_name"
+    sort_order = 1 if order == "asc" else -1
+
+    cursor = (
+        db.students.find(query)
+        .sort(sort_field, sort_order)
+        .skip(offset)
+        .limit(limit)
+    )
+    students = await cursor.to_list(length=None)
+    for student in students:
+        student["_id"] = str(student["_id"])
+
+    adapter = TypeAdapter(List[StudentWithStatistic])
+    return adapter.validate_python(students)
+
+
 @router.post("/", response_model=Student, status_code=status.HTTP_201_CREATED)
 async def create_student(student: Student):
     try:
@@ -41,6 +112,19 @@ async def create_student(student: Student):
 
     except Exception as e:
         raise HTTPException(500, f"Database operation failed: {e}")
+
+
+@router.get("/{student_id}", response_model=StudentWithStatistic)
+async def get_student(student_id: str):
+    if not ObjectId.is_valid(student_id):
+        raise HTTPException(status_code=400, detail="Invalid student ID")
+
+    student = await db.students.find_one({"_id": ObjectId(student_id)})
+    if not student:
+        raise HTTPException(status_code=404, detail="Student not found")
+
+    student["_id"] = str(student["_id"])
+    return TypeAdapter(StudentWithStatistic).validate_python(student)
 
 
 @router.patch("/{student_id}", response_model=StudentWithStatistic)
