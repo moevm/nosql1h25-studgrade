@@ -1,29 +1,46 @@
 from pydantic import BaseModel, ConfigDict, Field, EmailStr
 from typing import Optional, Literal, List
-from bson import ObjectId
-from pydantic_core import core_schema
+
+from .PyObjectID import PyObjectId
+
+Role = Literal["student", "teacher", "admin"]
 
 
-class PyObjectId(str):
+class UserCreateSchema(BaseModel):
+    firstName: str
+    middleName: Optional[str]
+    lastName: str
+    login: str
+    email: EmailStr
+    password: str
+    role: Role = Field(
+        "student", description="User role; defaults to student"
+    )
 
-    @classmethod
-    def __get_pydantic_core_schema__(cls, _source_type, _handler):
-        def validate(value):
-            if isinstance(value, ObjectId):
-                return str(value)
-            if isinstance(value, str):
-                try:
-                    ObjectId(value)
-                    return value
-                except Exception:
-                    raise ValueError("Invalid ObjectId")
-            raise ValueError("Must be ObjectId or str")
-
-        return core_schema.no_info_after_validator_function(
-            validate,
-            core_schema.str_schema(),
-            serialization=core_schema.to_string_ser_schema(),
-        )
+    model_config = ConfigDict(
+        populate_by_name=True,
+        arbitrary_types_allowed=True,
+        json_schema_extra={
+            "example": {
+                "firstName": "Olga",
+                "middleName": "Ivanovna",
+                "lastName": "Sidorova",
+                "login": "o.sidorova",
+                "email": "o.sidorova@example.com",
+                "role": "student",
+            }
+        },
+    )
+    
+class UserResponseSchema(BaseModel):
+    id: str
+    firstName: str
+    middleName: Optional[str]
+    lastName: str
+    login: str
+    email: EmailStr
+    role: Role
+    
 
 
 class User(BaseModel):
@@ -38,7 +55,7 @@ class User(BaseModel):
                 "lastName": "Sidorova",
                 "login": "o.sidorova",
                 "email": "o.sidorova@example.com",
-                "role": "teacher"
+                "role": "teacher",
             }
         },
     )
@@ -64,7 +81,7 @@ class UserUpdate(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
         arbitrary_types_allowed=True,
-        extra="forbid"  # Запрещает неизвестные поля
+        extra="forbid",  # Запрещает неизвестные поля
     )
 
     first_name: Optional[str] = Field(None, alias="firstName")
