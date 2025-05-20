@@ -14,6 +14,7 @@ from src.schemas.user import (
     UserCreateSchema,
     UserResponseSchema,
     UserUpdate,
+    UserUpdateSchema,
 )
 
 router = APIRouter()
@@ -99,93 +100,57 @@ async def create_user(
             detail=f"Database operation failed: {str(e)}",
         )
 
-    return UserResponseSchema(
-        id=str(saved_user.id),
-        firstName=saved_user.firstName,
-        middleName=saved_user.middleName,
-        lastName=saved_user.lastName,
-        login=saved_user.login,
-        email=saved_user.email,
-        role=saved_user.role,
-    )
+    return saved_user.to_response_schema()
 
 
 @router.get("/{user_id}", response_model=UserResponseSchema)
 async def get_user(user_id: str, collection=Depends(get_users_collection)):
-    if not ObjectId.is_valid(user_id):
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Invalid user ID",
-        )
-
     try:
         user = await user_repository.get_user_by_id(
             ObjectId(user_id), collection)
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e),
+        )
     except UserNotFoundError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
 
-    return UserResponseSchema(
-        id=str(user.id),
-        firstName=user.firstName,
-        middleName=user.middleName,
-        lastName=user.lastName,
-        login=user.login,
-        email=user.email,
-        role=user.role,
-    )
+    return user.to_response_schema()
     
-    
-@router.patch("/{user_id}", response_model=User)
-async def update_user(user_id: str, user: UserUpdate):
-    if not ObjectId.is_valid(user_id):
+@router.patch("/{user_id}", response_model=UserResponseSchema)
+async def update_user_endpoint(
+    user_id: str ,
+    update_data: UserUpdateSchema,
+    collection = Depends(get_users_collection),
+):
+    update_dict = update_data.model_dump(exclude_none=True)
+
+    try:
+        updated_user: UserModel = await user_repository.update_user(user_id, update_dict, collection)
+    except ValueError:
         raise HTTPException(status_code=400, detail="Invalid user ID")
-
-    existing = await db.users.find_one({"_id": ObjectId(user_id)})
-    if not existing:
+    except UserNotFoundError:
         raise HTTPException(status_code=404, detail="User not found")
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Database operation failed: {str(e)}",
+        )
 
-    update_data = user.model_dump(by_alias=True, exclude_unset=True)
-
-    if not update_data:
-        raise HTTPException(status_code=400, detail="No update data provided")
-
-    await db.users.update_one({"_id": ObjectId(user_id)}, {"$set": update_data})
-
-    updated = await db.users.find_one({"_id": ObjectId(user_id)})
-    updated["_id"] = str(updated["_id"])
-
-    return TypeAdapter(User).validate_python(updated)
+    return updated_user.to_response_schema()
 
 
 @router.delete("/{user_id}", status_code=status.HTTP_204_NO_CONTENT)
-async def delete_user(user_id: str):
-    if not ObjectId.is_valid(user_id):
+async def delete_user_endpoint(
+    user_id: str,
+    collection = Depends(get_users_collection)
+):
+    try:
+        await user_repository.delete_user(user_id, collection)
+    except ValueError as e:
         raise HTTPException(status_code=400, detail="Invalid user ID")
-
-    result = await db.users.delete_one({"_id": ObjectId(user_id)})
-    if result.deleted_count == 0:
+    except UserNotFoundError:
         raise HTTPException(status_code=404, detail="User not found")
 
 
-@router.post(
-    "/bulk/",
-    response_model=UserBulkCreateResponse,
-    status_code=status.HTTP_201_CREATED,
-    summary="Bulk create users",
-    tags=["users", "bulk"],
-)
-async def bulk_create_users(users: List[User]):
-    try:
-        users_dicts = [
-            user.model_dump(by_alias=True, exclude_none=True) for user in users
-        ]
-        result = await db.users.insert_many(users_dicts)
-        return UserBulkCreateResponse(
-            inserted_ids=[str(id) for id in result.inserted_ids]
-        )
-
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Bulk create operation failed: {str(e)}",
-        )

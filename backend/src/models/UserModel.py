@@ -41,6 +41,17 @@ class UserModel(BaseModel):
         if data.get("_id") is None:
             del data["_id"]
         return data
+
+    def to_response_schema(self) -> "UserResponseSchema":
+        return UserResponseSchema(
+            id=str(self.id),
+            firstName=self.firstName,
+            middleName=self.middleName,
+            lastName=self.lastName,
+            login=self.login,
+            email=self.email,
+            role=self.role
+        )
         
 
-from src.schemas.user import UserCreateSchema
+from src.schemas.user import UserCreateSchema, UserResponseSchema

@@ -20,6 +20,7 @@ class UserCreateSchema(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
         arbitrary_types_allowed=True,
+        extra="forbid",  
         json_schema_extra={
             "example": {
                 "firstName": "Olga",
@@ -41,7 +42,34 @@ class UserResponseSchema(BaseModel):
     email: EmailStr
     role: Role
     
+    model_config = ConfigDict(
+        extra="forbid", 
+    )
+    
+class UserUpdateSchema(BaseModel):
+    firstName: Optional[str]
+    middleName: Optional[str]
+    lastName: Optional[str]
+    login: Optional[str]
+    email: Optional[EmailStr]
+    role: Optional[Role]
 
+    model_config = ConfigDict(
+        populate_by_name=True,
+        arbitrary_types_allowed=True,
+        extra="forbid",
+        json_schema_extra={
+            "example": {
+                "firstName": "Olga",
+                "middleName": "Ivanovna",
+                "lastName": "Sidorova",
+                "login": "o.sidorova",
+                "email": "o.sidorova@example.com",
+                "role": "teacher",
+            }
+        },
+    )
+    
 
 class User(BaseModel):
 
