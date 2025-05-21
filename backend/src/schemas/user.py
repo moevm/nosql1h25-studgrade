@@ -1,5 +1,5 @@
 from pydantic import BaseModel, ConfigDict, Field, EmailStr
-from typing import Optional, Literal, List
+from typing import Optional, Literal
 
 from .PyObjectID import PyObjectId
 
@@ -13,14 +13,12 @@ class UserCreateSchema(BaseModel):
     login: str
     email: EmailStr
     password: str
-    role: Role = Field(
-        "student", description="User role; defaults to student"
-    )
+    role: Role = Field("student", description="User role; defaults to student")
 
     model_config = ConfigDict(
         populate_by_name=True,
         arbitrary_types_allowed=True,
-        extra="forbid",  
+        extra="forbid",
         json_schema_extra={
             "example": {
                 "firstName": "Olga",
@@ -32,20 +30,22 @@ class UserCreateSchema(BaseModel):
             }
         },
     )
-    
+
+
 class UserResponseSchema(BaseModel):
-    id: str
+    id: PyObjectId
     firstName: str
     middleName: Optional[str]
     lastName: str
     login: str
     email: EmailStr
     role: Role
-    
+
     model_config = ConfigDict(
-        extra="forbid", 
+        extra="forbid",
     )
-    
+
+
 class UserUpdateSchema(BaseModel):
     firstName: Optional[str]
     middleName: Optional[str]
@@ -69,52 +69,3 @@ class UserUpdateSchema(BaseModel):
             }
         },
     )
-    
-
-class User(BaseModel):
-
-    model_config = ConfigDict(
-        populate_by_name=True,
-        arbitrary_types_allowed=True,
-        json_schema_extra={
-            "example": {
-                "firstName": "Olga",
-                "middleName": "Ivanovna",
-                "lastName": "Sidorova",
-                "login": "o.sidorova",
-                "email": "o.sidorova@example.com",
-                "role": "teacher",
-            }
-        },
-    )
-
-    id: Optional[PyObjectId] = Field(None, alias="_id")
-
-    first_name: str = Field(..., alias="firstName")
-    middle_name: Optional[str] = Field(None, alias="middleName")
-    last_name: str = Field(..., alias="lastName")
-
-    login: str
-    email: EmailStr
-    role: Literal["student", "teacher", "admin"] = Field(
-        "student", description="User role; defaults to student"
-    )
-
-
-class UserBulkCreateResponse(BaseModel):
-    inserted_ids: List[str]
-
-
-class UserUpdate(BaseModel):
-    model_config = ConfigDict(
-        populate_by_name=True,
-        arbitrary_types_allowed=True,
-        extra="forbid",  # Запрещает неизвестные поля
-    )
-
-    first_name: Optional[str] = Field(None, alias="firstName")
-    middle_name: Optional[str] = Field(None, alias="middleName")
-    last_name: Optional[str] = Field(None, alias="lastName")
-    login: Optional[str] = None
-    email: Optional[EmailStr] = None
-    role: Optional[Literal["student", "teacher", "admin"]] = None

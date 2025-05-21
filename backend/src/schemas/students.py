@@ -109,3 +109,9 @@ class StudentWithStatistic(Student):
 
 class StudentBulkCreateResponse(BaseModel):
     inserted_ids: List[str]
+
+
+if not TYPE_CHECKING:
+    from src.schemas.subjects import SubjectStatModel
+
+StudentWithStatistic.model_rebuild()

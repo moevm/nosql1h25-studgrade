@@ -1,8 +1,14 @@
 from bson import ObjectId
 from motor.motor_asyncio import AsyncIOMotorCollection
+from pydantic import ValidationError
 from src.models import PyObjectID
 from src.models.UserModel import UserModel
-from src.exceptions import UserAlreadyExistsError, UserNotFoundError
+from src.exceptions import UserAlreadyExistsError, UserNotFoundError, DataCorruptionError
+from src.query_params.user_params import (
+    PaginationParams,
+    UserFilterParams,
+    UserSortParams,
+)
 
 
 async def save_user(
@@ -23,6 +29,7 @@ async def save_user(
     user_model.id = result.inserted_id
     return user_model
 
+
 async def get_user_by_id(
     user_id: str,
     collection: AsyncIOMotorCollection,
@@ -34,17 +41,15 @@ async def get_user_by_id(
         raise UserNotFoundError(f"User with id {user_id} not found.")
     return UserModel(**user)
 
+
 async def update_user(
-    user_id: str,
-    updates: dict,
-    collection: AsyncIOMotorCollection
+    user_id: str, updates: dict, collection: AsyncIOMotorCollection
 ) -> UserModel:
     if not ObjectId.is_valid(user_id):
         raise ValueError("Invalid ObjectId")
 
     result = await collection.update_one(
-        {"_id": ObjectId(user_id)},
-        {"$set": updates}
+        {"_id": ObjectId(user_id)}, {"$set": updates}
     )
 
     if result.matched_count == 0:
@@ -53,6 +58,7 @@ async def update_user(
     updated = await collection.find_one({"_id": ObjectId(user_id)})
     return UserModel(**updated)
 
+
 async def delete_user(user_id: str, collection: AsyncIOMotorCollection) -> None:
     if not ObjectId.is_valid(user_id):
         raise ValueError("Invalid ObjectId")
@@ -60,3 +66,25 @@ async def delete_user(user_id: str, collection: AsyncIOMotorCollection) -> None:
     result = await collection.delete_one({"_id": ObjectId(user_id)})
     if result.deleted_count == 0:
         raise UserNotFoundError()
+
+
+async def get_list_users(
+    filters: UserFilterParams,
+    sort: UserSortParams,
+    pagination: PaginationParams,
+    collection: AsyncIOMotorCollection,
+) -> list[UserModel]:
+    cursor = (
+        collection.find(filters.to_mongo_filter())
+        .sort(sort.to_mongo_sort())
+        .skip(pagination.offset)
+        .limit(pagination.limit)
+    )
+    try:
+        users = []
+        async for doc in cursor:
+            users.append(UserModel(**doc))
+    except ValidationError as e:
+        raise DataCorruptionError(f"Invalid user data in DB: {e}")
+    return users
+
