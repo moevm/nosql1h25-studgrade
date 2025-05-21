@@ -1,9 +1,12 @@
 from bson import ObjectId
 from motor.motor_asyncio import AsyncIOMotorCollection
 from pydantic import ValidationError
-from src.models import PyObjectID
 from src.models.UserModel import UserModel
-from src.exceptions import UserAlreadyExistsError, UserNotFoundError, DataCorruptionError
+from src.exceptions import (
+    UserAlreadyExistsError,
+    UserNotFoundError,
+    DataCorruptionError,
+)
 from src.query_params.user_params import (
     PaginationParams,
     UserFilterParams,
@@ -15,14 +18,10 @@ async def save_user(
     user_model: UserModel,
     collection: AsyncIOMotorCollection,
 ) -> UserModel:
-    # Check if user with the same login or email already exists
-    existing = await collection.find_one(
-        {"$or": [{"login": user_model.login}, {"email": user_model.email}]}
-    )
+    # Check if user with the same  email already exists
+    existing = await collection.find_one({"email": user_model.email})
     if existing:
-        raise UserAlreadyExistsError(
-            'User with this login or email already exists.'
-        )
+        raise UserAlreadyExistsError('User with this email already exists.')
 
     # Insert the new user into the database
     result = await collection.insert_one(user_model.mongo_dump())
@@ -69,7 +68,7 @@ async def delete_user(user_id: str, collection: AsyncIOMotorCollection) -> None:
 
 
 async def get_list_users(
-    filters: UserFilterParams,
+    filters: UserFilterParams,  # type: ignore
     sort: UserSortParams,
     pagination: PaginationParams,
     collection: AsyncIOMotorCollection,
@@ -87,4 +86,3 @@ async def get_list_users(
     except ValidationError as e:
         raise DataCorruptionError(f"Invalid user data in DB: {e}")
     return users
-

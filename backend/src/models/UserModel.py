@@ -13,7 +13,6 @@ class UserModel(BaseModel):
     firstName: str
     middleName: str
     lastName: str
-    login: str
     email: EmailStr
     role: str
     password_hash: str
@@ -30,7 +29,6 @@ class UserModel(BaseModel):
             firstName=user_in.firstName,
             middleName=user_in.middleName,
             lastName=user_in.lastName,
-            login=user_in.login,
             email=user_in.email,
             role=user_in.role,
             password_hash=password_context.hash(user_in.password)
@@ -48,7 +46,6 @@ class UserModel(BaseModel):
             firstName=self.firstName,
             middleName=self.middleName,
             lastName=self.lastName,
-            login=self.login,
             email=self.email,
             role=self.role
         )

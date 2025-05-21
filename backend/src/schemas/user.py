@@ -10,7 +10,6 @@ class UserCreateSchema(BaseModel):
     firstName: str
     middleName: Optional[str]
     lastName: str
-    login: str
     email: EmailStr
     password: str
     role: Role = Field("student", description="User role; defaults to student")
@@ -24,7 +23,6 @@ class UserCreateSchema(BaseModel):
                 "firstName": "Olga",
                 "middleName": "Ivanovna",
                 "lastName": "Sidorova",
-                "login": "o.sidorova",
                 "email": "o.sidorova@example.com",
                 "role": "student",
             }
@@ -37,7 +35,6 @@ class UserResponseSchema(BaseModel):
     firstName: str
     middleName: Optional[str]
     lastName: str
-    login: str
     email: EmailStr
     role: Role
 
@@ -50,7 +47,6 @@ class UserUpdateSchema(BaseModel):
     firstName: Optional[str]
     middleName: Optional[str]
     lastName: Optional[str]
-    login: Optional[str]
     email: Optional[EmailStr]
     role: Optional[Role]
 
@@ -63,7 +59,6 @@ class UserUpdateSchema(BaseModel):
                 "firstName": "Olga",
                 "middleName": "Ivanovna",
                 "lastName": "Sidorova",
-                "login": "o.sidorova",
                 "email": "o.sidorova@example.com",
                 "role": "teacher",
             }
