@@ -1,7 +1,7 @@
 from typing import Optional
 
-from datetime import date
-from pydantic import BaseModel, ConfigDict, Field
+from datetime import date, datetime
+from pydantic import BaseModel, ConfigDict, Field, field_serializer
 from .PyObjectID import PyObjectId
 
 

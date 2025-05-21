@@ -27,7 +27,6 @@ class PyObjectId(str):
 
 
 class UserModel(BaseModel):
-
     model_config = ConfigDict(
         populate_by_name=True,
         arbitrary_types_allowed=True,
@@ -46,29 +45,23 @@ class UserModel(BaseModel):
 
 
 class Teacher(BaseModel):
-
     model_config = ConfigDict(
-        populate_by_name=True,
-        arbitrary_types_allowed=True,
-        json_schema_extra={
-            "example": {
-                "firstName": "Ivan",
-                "middleName": "Ivanovich",
-                "lastName": "Ivanov",
-                "userId": "65f300c6b7c64b43c80b5aa1"
-            }
-        },
+        populate_by_name=True, arbitrary_types_allowed=True,
+        json_schema_extra={"example": {
+            "firstName": "Ivan", "middleName": "Ivanovich",
+            "lastName": "Ivanov"
+        }},
     )
 
     id: Optional[PyObjectId] = Field(None, alias="_id")
     first_name: str = Field(..., alias="firstName")
     middle_name: Optional[str] = Field(None, alias="middleName")
     last_name: str = Field(..., alias="lastName")
+
     user_id: Optional[PyObjectId] = Field(None, alias="userId")
 
 
 class TeacherWithUser(Teacher):
-
     model_config = ConfigDict(
         populate_by_name=True,
         arbitrary_types_allowed=True,
@@ -88,6 +81,7 @@ class TeacherWithUser(Teacher):
     )
 
     user: Optional[UserModel] = None
+
 
 class TeacherBulkCreateResponse(BaseModel):
     inserted_ids: list[str]
