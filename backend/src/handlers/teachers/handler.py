@@ -1,14 +1,24 @@
 from typing import Optional, List, Literal
-from fastapi import APIRouter, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from bson import ObjectId
-from pydantic import TypeAdapter
+from pydantic import TypeAdapter, ValidationError
 
-from src.schemas.teachers import Teacher, TeacherWithUser, TeacherBulkCreateResponse
+from src.db.dependencies import get_teachers_collection, get_users_collection
+from src.exceptions import UserAlreadyExistsError
+from src.schemas.teachers import (
+    Teacher,
+    TeacherWithUser,
+    TeacherBulkCreateResponse,
+    TeacherWithUserResponseSchema,
+    TeacherCreateSchema,
+)
 from src.db import db
 from src.utils.security import generate_random_password, hash_password
+from src.models.UserModel import UserModel
+from src.models.TeacherModel import TeacherModel
+from src.repositories import user_repository, teacher_repository
 
 router = APIRouter()
-
 
 
 @router.get("/", response_model=List[TeacherWithUser])
@@ -35,8 +45,7 @@ async def get_all_teachers(
     sort_field = sort_by if sort_by in allowed_sort_fields else "lastName"
 
     cursor = (
-        db.teachers
-        .find(query)
+        db.teachers.find(query)
         .sort(sort_field, sort_order)
         .skip(offset)
         .limit(limit)
@@ -52,27 +61,67 @@ async def get_all_teachers(
     return adapter.validate_python(teachers)
 
 
-@router.post("/", response_model=TeacherWithUser, status_code=status.HTTP_201_CREATED)
-async def create_teacher(teacher: Teacher):
+# @router.post("/", response_model=TeacherWithUser, status_code=status.HTTP_201_CREATED)
+# async def create_teacher(teacher: Teacher):
+#     try:
+#         user_id, raw_pwd = await _create_linked_user(teacher)
+
+#         teacher_dict = teacher.model_dump(by_alias=True, exclude={"id", "user_id"})
+#         teacher_dict["userId"] = ObjectId(user_id)
+
+#         async with await db.client.start_session() as s:
+#             async with s.start_transaction():
+#                 res = await db.teachers.insert_one(teacher_dict, session=s)
+
+#         created = await db.teachers.find_one({"_id": res.inserted_id})
+#         created["_id"] = str(created["_id"])
+#         created["rawPassword"] = raw_pwd
+#         created["user"] = await db.users.find_one({"_id": ObjectId(user_id)}, {"passwordHash": 0})
+#         created["user"]["_id"] = str(created["user"]["_id"])
+#         return created
+
+#     except Exception as e:
+#         raise HTTPException(500, f"Database operation failed: {e}")
+
+
+@router.post(
+    "/",
+    response_model=TeacherWithUserResponseSchema,
+    status_code=status.HTTP_201_CREATED,
+    tags=["teachers"],
+)
+async def create_teacher(
+    teacher: TeacherCreateSchema,
+    teachers_collection=Depends(get_teachers_collection),
+    users_collection=Depends(get_users_collection),
+):
     try:
-        user_id, raw_pwd = await _create_linked_user(teacher)
+        user_model = UserModel.from_input(teacher)
+        user_model.role = "teacher"
+    except ValidationError as e:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=f"Validation error: {str(e)}",
+        )
 
-        teacher_dict = teacher.model_dump(by_alias=True, exclude={"id", "user_id"})
-        teacher_dict["userId"] = ObjectId(user_id)
-
-        async with await db.client.start_session() as s:
-            async with s.start_transaction():
-                res = await db.teachers.insert_one(teacher_dict, session=s)
-
-        created = await db.teachers.find_one({"_id": res.inserted_id})
-        created["_id"] = str(created["_id"])
-        created["rawPassword"] = raw_pwd
-        created["user"] = await db.users.find_one({"_id": ObjectId(user_id)}, {"passwordHash": 0})
-        created["user"]["_id"] = str(created["user"]["_id"])
-        return created
-
-    except Exception as e:
-        raise HTTPException(500, f"Database operation failed: {e}")
+    try:
+        teacher_model = await teacher_repository.create_teacher(
+            teacher,
+            user_model,
+            teachers_collection,
+            users_collection,
+        )
+    except UserAlreadyExistsError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e),
+        )
+    except ValidationError as e:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=f"Validation error: {str(e)}",
+        )
+    return teacher_model.to_response_schema_with_user()
 
 
 @router.get("/{teacher_id}", response_model=TeacherWithUser)
@@ -102,11 +151,15 @@ async def update_teacher(teacher_id: str, teacher: Teacher):
 
     upd = teacher.model_dump(by_alias=True, exclude_unset=True)
     if not upd:
-        return TypeAdapter(TeacherWithUser).validate_python(existing | {"_id": teacher_id})
+        return TypeAdapter(TeacherWithUser).validate_python(
+            existing | {"_id": teacher_id}
+        )
 
     async with await db.client.start_session() as s:
         async with s.start_transaction():
-            await db.teachers.update_one({"_id": ObjectId(teacher_id)}, {"$set": upd}, session=s)
+            await db.teachers.update_one(
+                {"_id": ObjectId(teacher_id)}, {"$set": upd}, session=s
+            )
 
             user_updates = {}
             for field, alias in [
@@ -117,11 +170,15 @@ async def update_teacher(teacher_id: str, teacher: Teacher):
                 if field in teacher.__fields_set__:
                     user_updates[alias] = getattr(teacher, field)
             if user_updates:
-                await db.users.update_one({"_id": existing["userId"]}, {"$set": user_updates}, session=s)
+                await db.users.update_one(
+                    {"_id": existing["userId"]}, {"$set": user_updates}, session=s
+                )
 
     updated = await db.teachers.find_one({"_id": ObjectId(teacher_id)})
     updated["_id"] = str(updated["_id"])
-    updated["user"] = await db.users.find_one({"_id": existing["userId"]}, {"passwordHash": 0})
+    updated["user"] = await db.users.find_one(
+        {"_id": existing["userId"]}, {"passwordHash": 0}
+    )
     updated["user"]["_id"] = str(updated["user"]["_id"])
     return TypeAdapter(TeacherWithUser).validate_python(updated)
 
@@ -136,8 +193,11 @@ async def delete_teacher(teacher_id: str):
         raise HTTPException(404, "Teacher not found")
         async with await db.client.start_session() as s:
             async with s.start_transaction():
-                await db.teachers.delete_one({"_id": ObjectId(teacher_id)}, session=s)
+                await db.teachers.delete_one(
+                    {"_id": ObjectId(teacher_id)}, session=s
+                )
                 await db.users.delete_one({"_id": teacher["userId"]}, session=s)
+
 
 @router.post(
     "/bulk/",
@@ -160,7 +220,9 @@ async def bulk_create_teachers(teachers: List[Teacher]):
 
                 result = await db.teachers.insert_many(teachers_dicts, session=s)
 
-        return TeacherBulkCreateResponse(inserted_ids=[str(i) for i in result.inserted_ids])
+        return TeacherBulkCreateResponse(
+            inserted_ids=[str(i) for i in result.inserted_ids]
+        )
 
     except Exception as e:
         raise HTTPException(500, f"Bulk create failed: {e}")

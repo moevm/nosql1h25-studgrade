@@ -8,7 +8,10 @@ Role = Literal["student", "teacher", "admin"]
 
 class UserCreateSchema(BaseModel):
     firstName: str
-    middleName: Optional[str]
+    middleName: Optional[str] = Field(
+        default=None,
+        description="Middle name of the user",
+    )
     lastName: str
     email: EmailStr
     password: str
