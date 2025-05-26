@@ -14,17 +14,49 @@ services:
     depends_on:
       - mongo
 
+  mongo-keygen:
+    container_name: mongo-keygen
+    build:
+      context: .
+      dockerfile: Dockerfile.keygen
+    restart: "no"
+    command: >
+      sh -c "
+        mkdir -p /keyfile && \
+        openssl rand -base64 756 > /keyfile/mongo-keyfile && \
+        chmod 400 /keyfile/mongo-keyfile && \
+        ls /keyfile 
+      "
+    volumes:
+      - mongo-keyfile:/keyfile
+
   mongo:
-    image: mongo:6.0
+    build:
+      context: ./mongo
+    container_name: mongo
     restart: always
     environment:
       MONGO_INITDB_ROOT_USERNAME: user
       MONGO_INITDB_ROOT_PASSWORD: password
       MONGO_INITDB_DATABASE: master
+    depends_on:
+      mongo-keygen:
+        condition: service_completed_successfully
     ports:
       - "27017:27017"
     volumes:
       - mongo_data:/data/db
+      - mongo-keyfile:/mongo-keyfile
+    healthcheck:
+      test: [ "CMD", "mongosh", "--host", "localhost", "--eval", "db.adminCommand('ping')" ]
+      interval: 5s
+      timeout: 10s
+      retries: 5
+      start_period: 2s
+
+
+
 
 volumes:
   mongo_data:
+  mongo-keyfile:
