@@ -11,6 +11,9 @@ const PageLayout = () => {
       </header>
       <div className={styles.container}>
         <aside className={styles.aside_menu}>
+          <NavLink to={"/users"} className={styles.aside_menu__link}>
+            Создать пользователя
+          </NavLink>
           <NavLink to={"/profile"} className={styles.aside_menu__link}>
             <ProfileIcon /> Профиль
           </NavLink>
