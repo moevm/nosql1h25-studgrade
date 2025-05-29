@@ -10,7 +10,7 @@ services:
     build: ../backend
     container_name: backend
     ports:
-      - "8000:8000"
+      - "127.0.0.1:8000:8000"
     depends_on:
       - mongo
 
@@ -42,8 +42,6 @@ services:
     depends_on:
       mongo-keygen:
         condition: service_completed_successfully
-    ports:
-      - "27017:27017"
     volumes:
       - mongo_data:/data/db
       - mongo-keyfile:/mongo-keyfile
