@@ -1,29 +1,70 @@
 from pydantic import BaseModel, ConfigDict, Field, EmailStr
-from typing import Optional
+from typing import Literal, Optional
 from bson import ObjectId
 from pydantic_core import core_schema
+from .PyObjectID import PyObjectId
+
+from .user import UserCreateSchema, UserResponseSchema
 
 
-class PyObjectId(str):
+class TeacherCreateSchema(UserCreateSchema):
+    assignedGroups: list[str] = Field(
+        default_factory=list,
+        description="List of group IDs assigned to the teacher",
+    )
+    assignedSubjects: list[str] = Field(
+        default_factory=list,
+        description="List of subject IDs assigned to the teacher",
+    )
+    role: Literal["teacher"] = Field(
+        default="teacher",
+    )
+    model_config = ConfigDict(
+        populate_by_name=True,
+        arbitrary_types_allowed=True,
+        extra="forbid",
+        json_schema_extra={
+            "example": {
+                "firstName": "Ivan",
+                "middleName": "Ivanovich",
+                "lastName": "Ivanov",
+                "email": "ivanovii@example.com",
+                "password": "ivanovii123",
+                "assignedGroups": ["group1", "group2"],
+                "assignedSubjects": ["subject1", "subject2"],
+            }
+        },
+    )
 
-    @classmethod
-    def __get_pydantic_core_schema__(cls, _source_type, _handler):
-        def validate(value):
-            if isinstance(value, ObjectId):
-                return str(value)
-            if isinstance(value, str):
-                try:
-                    ObjectId(value)
-                    return value
-                except Exception:
-                    raise ValueError("Invalid ObjectId")
-            raise ValueError("Must be ObjectId or str")
 
-        return core_schema.no_info_after_validator_function(
-            validate,
-            core_schema.str_schema(),
-            serialization=core_schema.to_string_ser_schema(),
-        )
+class TeacherWithUserResponseSchema(BaseModel):
+    user: UserResponseSchema
+    userId: Optional[PyObjectId] = Field(None, alias="userId")
+    assignedGroups: list[str] = Field(
+        default_factory=list,
+        description="List of group IDs assigned to the teacher",
+    )
+    assignedSubjects: list[str] = Field(
+        default_factory=list,
+        description="List of subject IDs assigned to the teacher",
+    )
+    model_config = ConfigDict(
+        populate_by_name=True,
+        arbitrary_types_allowed=True,
+        extra="forbid",
+        json_schema_extra={
+            "example": {
+                "_id": "65f31fa6b7c64b43c80b5aa2",
+                "firstName": "Ivan",
+                "middleName": "Ivanovich",
+                "lastName": "Ivanov",
+                "email": "ivanovii@example.com",
+                "role": "teacher",
+                "assignedGroups": ["group1", "group2"],
+                "assignedSubjects": ["subject1", "subject2"],
+            },
+        },
+    )
 
 
 class UserModel(BaseModel):
@@ -34,7 +75,7 @@ class UserModel(BaseModel):
             "example": {
                 "_id": "65f300c6b7c64b43c80b5aa1",
                 "email": "teacher@example.com",
-                "role": "teacher"
+                "role": "teacher",
             }
         },
     )
@@ -46,11 +87,15 @@ class UserModel(BaseModel):
 
 class Teacher(BaseModel):
     model_config = ConfigDict(
-        populate_by_name=True, arbitrary_types_allowed=True,
-        json_schema_extra={"example": {
-            "firstName": "Ivan", "middleName": "Ivanovich",
-            "lastName": "Ivanov"
-        }},
+        populate_by_name=True,
+        arbitrary_types_allowed=True,
+        json_schema_extra={
+            "example": {
+                "firstName": "Ivan",
+                "middleName": "Ivanovich",
+                "lastName": "Ivanov",
+            }
+        },
     )
 
     id: Optional[PyObjectId] = Field(None, alias="_id")
@@ -74,8 +119,8 @@ class TeacherWithUser(Teacher):
                 "user": {
                     "_id": "65f300c6b7c64b43c80b5aa1",
                     "email": "teacher@example.com",
-                    "role": "teacher"
-                }
+                    "role": "teacher",
+                },
             }
         },
     )
