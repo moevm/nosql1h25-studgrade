@@ -6,8 +6,10 @@ from .handlers.subjects.handler import router as subjects_router
 from .handlers.students.handler import router as students_router
 from .handlers.teachers.handler import router as teachers_router
 from .handlers.logs.handler import router as log_router
+from .handlers.users.handler import router as users_router
 
 origins = [o.strip() for o in os.environ.get("CORS_ORIGINS", "").split(",") if o.strip()]
+
 
 app = FastAPI()
 
@@ -41,6 +43,12 @@ app.include_router(
     log_router,
     prefix="/logs",
     tags=["logs"]
+)
+
+app.include_router(
+    users_router,
+    prefix="/users",
+    tags=["users"]
 )
 
 if __name__ == "__main__":
