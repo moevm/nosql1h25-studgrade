@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styles from './CreateUserPage.module.css';
 
+
 const CreateUserPage = () => {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
@@ -45,7 +46,7 @@ const CreateUserPage = () => {
       }
 
       const data = await response.json();
-      navigate(`/users`); // Возвращаемся к списку пользователей
+      navigate(`/users`); 
     } catch (err) {
       setError(err.message || 'Произошла ошибка');
     } finally {
@@ -197,4 +198,3 @@ const CreateUserPage = () => {
 };
 
 export default CreateUserPage;
-
