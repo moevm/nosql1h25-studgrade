@@ -8,6 +8,8 @@ import StatsMainPage from "./pages/StatsMainPage";
 import PageLayout from "./components/PageLayout";
 import CreateUserPage from "./pages/CreateUserPage/CreateUserPage";
 
+import UpdateUserPage from './pages/UpdateUserPage/UpdateUserPage'
+
 export const router = createBrowserRouter([
   {
     element: <PageLayout />,
@@ -23,6 +25,10 @@ export const router = createBrowserRouter([
       {
         element: <CreateUserPage />,
         path: "/users",
+      },
+      {
+        element: <UpdateUserPage />,
+        path: "/users/:userId",
       },
     ],
   },
