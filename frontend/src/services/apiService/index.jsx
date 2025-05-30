@@ -35,7 +35,7 @@ api.interceptors.request.use((config) => {
 // --- USERS ---
 export const getUsers = (params) => api.get("/users", { params });
 export const getUserById = (id) => api.get(`/users/${id}`);
-export const createUser = (data) => api.post("/users", data);
+export const createUser = (data) => api.post("/users/", data);
 export const updateUserById = (id, data) => api.patch(`/users/${id}`, data);
 export const deleteUserById = (id) => api.delete(`/users/${id}`);
 export const bulkCreateUsers = (users) => api.post("/users/bulk", users);

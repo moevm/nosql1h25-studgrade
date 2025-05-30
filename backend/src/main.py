@@ -10,7 +10,6 @@ from .handlers.users.handler import router as users_router
 
 origins = [o.strip() for o in os.environ.get("CORS_ORIGINS", "").split(",") if o.strip()]
 
-
 app = FastAPI()
 
 app.add_middleware(
