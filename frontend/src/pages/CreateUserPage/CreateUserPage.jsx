@@ -45,7 +45,7 @@ const CreateUserPage = () => {
       
       <form onSubmit={handleSubmit} className={styles.form}>
         <div className={styles.formGroup}>
-          <label>Имя*</label>
+          <label>Имя</label>
           <input
             type="text"
             name="firstName"
@@ -57,7 +57,7 @@ const CreateUserPage = () => {
         </div>
         
         <div className={styles.formGroup}>
-          <label>Фамилия*</label>
+          <label>Фамилия</label>
           <input
             type="text"
             name="lastName"
@@ -79,7 +79,7 @@ const CreateUserPage = () => {
         </div>
         
         <div className={styles.formGroup}>
-          <label>Email*</label>
+          <label>Email</label>
           <input
             type="email"
             name="email"
@@ -90,7 +90,7 @@ const CreateUserPage = () => {
         </div>
         
         <div className={styles.formGroup}>
-          <label>Пароль*</label>
+          <label>Пароль</label>
           <input
             type="password"
             name="password"
