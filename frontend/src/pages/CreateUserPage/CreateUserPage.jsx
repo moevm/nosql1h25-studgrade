@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useCreateUser } from '../../hooks/useUsers';
 import styles from './CreateUserPage.module.css';
-
 
 const CreateUserPage = () => {
   const navigate = useNavigate();
@@ -9,17 +9,12 @@ const CreateUserPage = () => {
     firstName: '',
     lastName: '',
     middleName: '',
-    birthDate: '',
-    admissionYear: '',
-    faculty: '',
-    programName: '',
-    course: '',
-    groupName: '',
     email: '',
     password: ''
   });
-  const [loading, setLoading] = useState(false);
+  
   const [error, setError] = useState(null);
+  const { create, loading: createLoading } = useCreateUser();
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -28,29 +23,17 @@ const CreateUserPage = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setLoading(true);
     setError(null);
 
     try {
-      const response = await fetch('http://localhost:8000/users/', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(formData)
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.detail || 'Ошибка при создании пользователя');
-      }
-
-      const data = await response.json();
-      navigate(`/users`); 
+      await create(formData);
+      navigate('/users');
     } catch (err) {
-      setError(err.message || 'Произошла ошибка');
-    } finally {
-      setLoading(false);
+      if (err.message.includes('Network Error') || err.message.includes('Failed to fetch')) {
+        setError('Ошибка соединения с сервером. Проверьте CORS настройки бэкенда.');
+      } else {
+        setError(err.response?.data?.detail || err.message || 'Ошибка при создании пользователя');
+      }
     }
   };
 
@@ -62,24 +45,26 @@ const CreateUserPage = () => {
       
       <form onSubmit={handleSubmit} className={styles.form}>
         <div className={styles.formGroup}>
-          <label>Имя</label>
+          <label>Имя*</label>
           <input
             type="text"
             name="firstName"
             value={formData.firstName}
             onChange={handleChange}
             required
+            minLength={2}
           />
         </div>
         
         <div className={styles.formGroup}>
-          <label>Фамилия</label>
+          <label>Фамилия*</label>
           <input
             type="text"
             name="lastName"
             value={formData.lastName}
             onChange={handleChange}
             required
+            minLength={2}
           />
         </div>
         
@@ -94,77 +79,7 @@ const CreateUserPage = () => {
         </div>
         
         <div className={styles.formGroup}>
-          <label>Дата рождения</label>
-          <input
-            type="date"
-            name="birthDate"
-            value={formData.birthDate}
-            onChange={handleChange}
-            required
-          />
-        </div>
-        
-        <div className={styles.formGroup}>
-          <label>Год поступления</label>
-          <input
-            type="number"
-            name="admissionYear"
-            value={formData.admissionYear}
-            onChange={handleChange}
-            min="2000"
-            max="2030"
-            required
-          />
-        </div>
-        
-        <div className={styles.formGroup}>
-          <label>Факультет</label>
-          <input
-            type="text"
-            name="faculty"
-            value={formData.faculty}
-            onChange={handleChange}
-            required
-          />
-        </div>
-        
-        <div className={styles.formGroup}>
-          <label>Направление</label>
-          <input
-            type="text"
-            name="programName"
-            value={formData.programName}
-            onChange={handleChange}
-            required
-          />
-        </div>
-        
-        <div className={styles.formGroup}>
-          <label>Курс</label>
-          <input
-            type="number"
-            name="course"
-            value={formData.course}
-            onChange={handleChange}
-            min="1"
-            max="6"
-            required
-          />
-        </div>
-        
-        <div className={styles.formGroup}>
-          <label>Группа</label>
-          <input
-            type="text"
-            name="groupName"
-            value={formData.groupName}
-            onChange={handleChange}
-            required
-          />
-        </div>
-        
-        <div className={styles.formGroup}>
-          <label>Email</label>
+          <label>Email*</label>
           <input
             type="email"
             name="email"
@@ -175,22 +90,23 @@ const CreateUserPage = () => {
         </div>
         
         <div className={styles.formGroup}>
-          <label>Пароль</label>
+          <label>Пароль*</label>
           <input
             type="password"
             name="password"
             value={formData.password}
             onChange={handleChange}
             required
+            minLength={6}
           />
         </div>
         
         <button 
           type="submit" 
-          disabled={loading}
+          disabled={createLoading}
           className={styles.submitButton}
         >
-          {loading ? 'Создание...' : 'Создать пользователя'}
+          {createLoading ? 'Создание...' : 'Создать пользователя'}
         </button>
       </form>
     </div>
