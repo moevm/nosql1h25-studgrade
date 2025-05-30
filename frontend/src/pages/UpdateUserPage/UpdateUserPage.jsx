@@ -27,7 +27,7 @@ const UpdateUserPage = () => {
   useEffect(() => {
     const fetchUserData = async () => {
       try {
-        const response = await fetch(`http://localhost:8000/api/users/${userId}`);
+        const response = await fetch(`http://localhost:8000/users/${userId}`);
         
         if (!response.ok) {
           if (response.status === 404) {
@@ -91,7 +91,7 @@ const UpdateUserPage = () => {
         requestData.password = formData.password;
       }
 
-      const response = await fetch(`http://localhost:8000/api/users/${userId}`, {
+      const response = await fetch(`http://localhost:8000/users/${userId}`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json'

@@ -32,7 +32,7 @@ const CreateUserPage = () => {
     setError(null);
 
     try {
-      const response = await fetch('http://localhost:8000/api/users/', {
+      const response = await fetch('http://localhost:8000/users/', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
