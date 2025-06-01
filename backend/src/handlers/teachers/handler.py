@@ -17,71 +17,77 @@ from src.utils.security import generate_random_password, hash_password
 from src.models.UserModel import UserModel
 from src.models.TeacherModel import TeacherModel
 from src.repositories import user_repository, teacher_repository
+from src.query_params import get_pagination_params, PaginationParams
+from src.query_params.teacher_params import (
+    TeacherFilterParams,
+    TeacherSortParams,
+    get_teacher_sort_params,
+)
+from src.query_params.user_params import UserFilterParams
 
 router = APIRouter()
 
 
-@router.get("/", response_model=List[TeacherWithUser])
-async def get_all_teachers(
-    first_name: Optional[str] = Query(None, alias="first_name"),
-    middle_name: Optional[str] = Query(None, alias="middle_name"),
-    last_name: Optional[str] = Query(None, alias="last_name"),
-    limit: Optional[int] = Query(10, gt=0),
-    offset: Optional[int] = Query(0, ge=0),
-    sort_by: Optional[str] = Query("lastName"),
-    order: Optional[Literal["asc", "desc"]] = Query("asc"),
+# @router.get("/", response_model=List[TeacherWithUser])
+# async def get_all_teachers(
+#     first_name: Optional[str] = Query(None, alias="first_name"),
+#     middle_name: Optional[str] = Query(None, alias="middle_name"),
+#     last_name: Optional[str] = Query(None, alias="last_name"),
+#     limit: Optional[int] = Query(10, gt=0),
+#     offset: Optional[int] = Query(0, ge=0),
+#     sort_by: Optional[str] = Query("lastName"),
+#     order: Optional[Literal["asc", "desc"]] = Query("asc"),
+# ):
+
+#     query: dict = {}
+#     if first_name:
+#         query["firstName"] = {"$regex": first_name, "$options": "i"}
+#     if middle_name:
+#         query["middleName"] = {"$regex": middle_name, "$options": "i"}
+#     if last_name:
+#         query["lastName"] = {"$regex": last_name, "$options": "i"}
+
+#     sort_order = 1 if order == "asc" else -1
+#     allowed_sort_fields = ["firstName", "middleName", "lastName", "createdAt"]
+#     sort_field = sort_by if sort_by in allowed_sort_fields else "lastName"
+
+#     cursor = (
+#         db.teachers.find(query)
+#         .sort(sort_field, sort_order)
+#         .skip(offset)
+#         .limit(limit)
+#     )
+
+#     teachers = await cursor.to_list(length=None)
+#     for t in teachers:
+#         t["_id"] = str(t["_id"])
+#         if "userId" in t and isinstance(t["userId"], ObjectId):
+#             t["userId"] = str(t["userId"])
+
+
+#     adapter = TypeAdapter(List[TeacherWithUser])
+#     return adapter.validate_python(teachers)
+
+
+@router.get("/", response_model=list[TeacherWithUserResponseSchema])
+async def list_teachers_endpoint(
+    teacher_filters: TeacherFilterParams = Depends(),  # type: ignore
+    user_filters: UserFilterParams = Depends(),  # type: ignore
+    pagination: PaginationParams = Depends(get_pagination_params),
+    sort: TeacherSortParams = Depends(get_teacher_sort_params),
+    teachers_collection=Depends(get_teachers_collection),
+    users_collection=Depends(get_users_collection),
 ):
-
-    query: dict = {}
-    if first_name:
-        query["firstName"] = {"$regex": first_name, "$options": "i"}
-    if middle_name:
-        query["middleName"] = {"$regex": middle_name, "$options": "i"}
-    if last_name:
-        query["lastName"] = {"$regex": last_name, "$options": "i"}
-
-    sort_order = 1 if order == "asc" else -1
-    allowed_sort_fields = ["firstName", "middleName", "lastName", "createdAt"]
-    sort_field = sort_by if sort_by in allowed_sort_fields else "lastName"
-
-    cursor = (
-        db.teachers.find(query)
-        .sort(sort_field, sort_order)
-        .skip(offset)
-        .limit(limit)
+    teacher_models = await teacher_repository.get_list_teachers(
+        teacher_filters, user_filters, sort, pagination, teachers_collection, users_collection
     )
-
-    teachers = await cursor.to_list(length=None)
-    for t in teachers:
-        t["_id"] = str(t["_id"])
-        if "userId" in t and isinstance(t["userId"], ObjectId):
-            t["userId"] = str(t["userId"])
-
-    adapter = TypeAdapter(List[TeacherWithUser])
-    return adapter.validate_python(teachers)
-
-
-# @router.post("/", response_model=TeacherWithUser, status_code=status.HTTP_201_CREATED)
-# async def create_teacher(teacher: Teacher):
-#     try:
-#         user_id, raw_pwd = await _create_linked_user(teacher)
-
-#         teacher_dict = teacher.model_dump(by_alias=True, exclude={"id", "user_id"})
-#         teacher_dict["userId"] = ObjectId(user_id)
-
-#         async with await db.client.start_session() as s:
-#             async with s.start_transaction():
-#                 res = await db.teachers.insert_one(teacher_dict, session=s)
-
-#         created = await db.teachers.find_one({"_id": res.inserted_id})
-#         created["_id"] = str(created["_id"])
-#         created["rawPassword"] = raw_pwd
-#         created["user"] = await db.users.find_one({"_id": ObjectId(user_id)}, {"passwordHash": 0})
-#         created["user"]["_id"] = str(created["user"]["_id"])
-#         return created
-
-#     except Exception as e:
-#         raise HTTPException(500, f"Database operation failed: {e}")
+    try:
+        return [teacher.to_response_schema_with_user() for teacher in teacher_models]
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail="Internal error while serializing teachers: " + str(e),
+        )
 
 
 @router.post(

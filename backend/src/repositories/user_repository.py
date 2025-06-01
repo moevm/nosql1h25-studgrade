@@ -1,6 +1,7 @@
 from bson import ObjectId
 from motor.motor_asyncio import AsyncIOMotorCollection
 from pydantic import ValidationError
+from src.query_params import PaginationParams
 from src.models.UserModel import UserModel
 from src.exceptions import (
     UserAlreadyExistsError,
@@ -8,7 +9,6 @@ from src.exceptions import (
     DataCorruptionError,
 )
 from src.query_params.user_params import (
-    PaginationParams,
     UserFilterParams,
     UserSortParams,
 )

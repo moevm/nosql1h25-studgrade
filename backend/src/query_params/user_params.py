@@ -40,13 +40,5 @@ def get_user_sort_params(
     return UserSortParams(sort_by=sort_by, sort_order=sort_order)
 
 
-class PaginationParams(BaseModel):
-    limit: int = Field(default=50, ge=1, le=100)
-    offset: int = Field(default=0, ge=0)
 
 
-def get_pagination_params(
-    limit: int = Query(50, ge=1, le=100),
-    offset: int = Query(0, ge=0),
-) -> PaginationParams:
-    return PaginationParams(limit=limit, offset=offset)
