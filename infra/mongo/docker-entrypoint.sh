@@ -12,14 +12,31 @@ mongod --replSet rs0 --keyFile /tmp/mongo-keyfile --bind_ip_all --fork --logpath
 # Ждём запуска
 sleep 5
 
-# Инициализируем реплику, если ещё не инициализирована
-if ! mongosh --quiet --eval "rs.status().ok" | grep -q 1; then
-  mongosh --quiet --eval "rs.initiate({_id: 'rs0', members: [{_id: 0, host: 'mongo:27017'}]})"
+# Проверка реплики с аутентификацией
+RS_OK=$(mongosh admin --quiet --eval "
+try {
+  db.auth('${MONGO_INITDB_ROOT_USERNAME}', '${MONGO_INITDB_ROOT_PASSWORD}');
+  rs.status().ok
+} catch(e) {
+  0
+}" || echo 0)
+
+if [ "$RS_OK" != "1" ]; then
+  mongosh admin --quiet --eval "
+    rs.initiate({_id: 'rs0', members: [{_id: 0, host: 'mongo:27017'}]})
+  "
   sleep 3
 fi
 
 # Проверяем, существует ли пользователь
-USER_EXISTS=$(mongosh admin --quiet --eval "db.system.users.find({user: '${MONGO_INITDB_ROOT_USERNAME}'}).count()" || echo 0)
+USER_EXISTS=$(mongosh admin --quiet --eval "
+try {
+  db.auth('${MONGO_INITDB_ROOT_USERNAME}', '${MONGO_INITDB_ROOT_PASSWORD}');
+  db.system.users.find({user: '${MONGO_INITDB_ROOT_USERNAME}'}).count();
+} catch(e) {
+  0
+}" || echo 0)
+
 
 if [ "$USER_EXISTS" -eq 0 ]; then
   mongosh admin --quiet --eval "
