@@ -33,7 +33,7 @@ export function useTeachers(params = {}) {
 }
 
 export function useTeacherById(id) {
-  const [teacher, setTeacher] = useState(null);
+  const [data, setData] = useState(null);
   const [loading, setLoading] = useState(!!id);
   const [error, setError] = useState(null);
 
@@ -41,12 +41,12 @@ export function useTeacherById(id) {
     if (!id) return;
     setLoading(true);
     getTeacherById(id)
-      .then((res) => setTeacher(res.data))
+      .then((res) => setData(res.data))
       .catch((err) => setError(err))
       .finally(() => setLoading(false));
   }, [id]);
 
-  return { teacher, loading, error };
+  return { data, loading, error };
 }
 
 export function useCreateTeacher() {

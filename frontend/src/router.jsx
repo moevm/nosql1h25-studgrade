@@ -15,8 +15,8 @@ export const router = createBrowserRouter([
     element: <PageLayout />,
     children: [
       {
-        element: <ProfilePage />,
-        path: "/profile",
+        element: <ProfilePage role='user' />,
+        path: "/users/:userId",
       },
       {
         element: <StatsMainPage />,
