@@ -28,7 +28,7 @@ export const router = createBrowserRouter([
       },
       {
         element: <UpdateUserPage />,
-        path: "/users/:userId",
+        path: "/users/:userId/update",
       },
     ],
   },
