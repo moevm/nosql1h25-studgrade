@@ -12,7 +12,7 @@ services:
     ports:
       - "127.0.0.1:8000:8000"
     depends_on:
-      - mongo
+      - db
     environment:
       CORS_ORIGINS: ${CORS_ORIGINS}
 
@@ -32,7 +32,7 @@ services:
     volumes:
       - mongo-keyfile:/keyfile
 
-  mongo:
+  db:
     build:
       context: ./mongo
     container_name: mongo

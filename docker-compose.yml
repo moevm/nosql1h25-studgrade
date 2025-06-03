@@ -1,0 +1,6 @@
+include:
+  - ./infra/docker-compose.yml
+  - ./infra/docker-compose.override.yml
+
+services:
+  db:
