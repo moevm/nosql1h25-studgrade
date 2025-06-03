@@ -4,7 +4,7 @@ from bson import ObjectId
 from pydantic import TypeAdapter, ValidationError
 
 from src.db.dependencies import get_teachers_collection, get_users_collection
-from src.exceptions import UserAlreadyExistsError
+from src.exceptions import UserAlreadyExistsError, UserNotFoundError
 from src.schemas.teachers import (
     Teacher,
     TeacherWithUser,
@@ -125,21 +125,34 @@ async def create_teacher(
     return saved_teacher.to_response_schema()
 
 
-@router.get("/{teacher_id}", response_model=TeacherWithUser)
-async def get_teacher(teacher_id: str):
-    if not ObjectId.is_valid(teacher_id):
-        raise HTTPException(400, "Invalid teacher ID")
+# @router.get("/{teacher_id}", response_model=TeacherWithUser)
+# async def get_teacher(teacher_id: str):
+#     if not ObjectId.is_valid(teacher_id):
+#         raise HTTPException(400, "Invalid teacher ID")
 
-    teacher = await db.teachers.find_one({"_id": ObjectId(teacher_id)})
-    if not teacher:
-        raise HTTPException(404, "Teacher not found")
+#     teacher = await db.teachers.find_one({"_id": ObjectId(teacher_id)})
+#     if not teacher:
+#         raise HTTPException(404, "Teacher not found")
 
-    teacher["_id"] = str(teacher["_id"])
-    if "userId" in teacher and isinstance(teacher["userId"], ObjectId):
-        teacher["userId"] = str(teacher["userId"])
+#     teacher["_id"] = str(teacher["_id"])
+#     if "userId" in teacher and isinstance(teacher["userId"], ObjectId):
+#         teacher["userId"] = str(teacher["userId"])
 
-    return TypeAdapter(TeacherWithUser).validate_python(teacher)
+#     return TypeAdapter(TeacherWithUser).validate_python(teacher)
 
+@router.get("/{teacher_id}", response_model=TeacherWithUserResponseSchema, tags=["teachers"])
+async def get_teacher(teacher_id, collection=Depends(get_teachers_collection)):
+    try:
+        teacher = await teacher_repository.get_teacher_by_id(ObjectId(teacher_id), collection)
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e)
+        )
+    except UserNotFoundError as e:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+    
+    return teacher.to_response_schema()
 
 @router.patch("/{teacher_id}", response_model=TeacherWithUser)
 async def update_teacher(teacher_id: str, teacher: Teacher):

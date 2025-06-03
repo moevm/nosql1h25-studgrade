@@ -1,10 +1,9 @@
+from bson import ObjectId
 from motor.motor_asyncio import AsyncIOMotorCollection
 from pydantic import ValidationError
 
-from src.exceptions import DataCorruptionError
+from src.exceptions import DataCorruptionError, UserNotFoundError
 from src.models.TeacherModel import TeacherModel
-from src.models.UserModel import UserModel
-from src.exceptions import UserAlreadyExistsError
 from src.query_params import PaginationParams
 from src.query_params.teacher_params import (
     TeacherFilterParams,
@@ -52,3 +51,14 @@ async def get_list_teachers(
 
 
     return teachers
+
+
+async def get_teacher_by_id(teacher_id: str, collection: AsyncIOMotorCollection) -> TeacherModel:
+    if not ObjectId.is_valid(teacher_id):
+        raise ValueError("Invalid user ID")
+    teacher = await collection.find_one({"_id": teacher_id, "role": "teacher"})
+    if not teacher:
+        raise UserNotFoundError(f'Teacher with id {teacher_id} not found'
+                                )
+    return TeacherModel(**teacher)
+    
