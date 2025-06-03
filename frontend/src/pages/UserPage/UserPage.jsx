@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { Link } from "react-router-dom"
 import styles from "./UserPage.module.css";
 import DownloadIcon from "../../public/download.svg?react";
 import UploadIcon from "../../public/upload.svg?react";
@@ -10,14 +11,13 @@ import getFullName from "../../utils/getFullName";
 
 const ROLES = ["student", "teacher", "admin"];
 
-
 const UserPage = () => {
   const [selectedRoles, setSelectedRoles] = useState([]);
   const [userData, setUserData] = useState({
     firstName: "",
     lastName: "",
     middleName: "",
-    email: ""
+    email: "",
   });
   const debouncedUserData = useDebounce(userData, 500);
   const usersParams = useMemo(() => {
@@ -28,17 +28,13 @@ const UserPage = () => {
       email: debouncedUserData.email || undefined,
       role: selectedRoles.length > 0 ? selectedRoles : undefined,
     };
-  }, [
-    selectedRoles,
-  ]);
+  }, [selectedRoles]);
   const { users, loading, error } = useUsers(usersParams);
   console.log(usersParams, users);
 
   const toggleRole = (role) => {
     setSelectedRoles((prev) =>
-      prev.includes(role)
-        ? prev.filter((f) => f !== role)
-        : [...prev, role]
+      prev.includes(role) ? prev.filter((f) => f !== role) : [...prev, role]
     );
   };
 
@@ -224,7 +220,9 @@ const UserPage = () => {
             <tbody className={styles.info_table__body}>
               {users.map((user) => (
                 <tr key={user.id} className={styles.info_table__row}>
-                  <td>{getFullName(user)}</td>
+                  <Link to={`/users/${user.id}/`}>
+                    <td>{getFullName(user)}</td>
+                  </Link>
                   <td>{user.email}</td>
                   <td>{user.role}</td>
                   {/* <td>{student.attendance}</td>

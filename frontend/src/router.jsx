@@ -22,7 +22,6 @@ export const router = createBrowserRouter([
         path: "/users/:userId",
       },
       {
-        element: <StatsMainPage />,
         path: "/",
       },
       {
