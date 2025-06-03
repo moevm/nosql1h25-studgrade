@@ -13,6 +13,8 @@ services:
       - "127.0.0.1:8000:8000"
     depends_on:
       - mongo
+    environment:
+      CORS_ORIGINS: ${CORS_ORIGINS}
 
   mongo-keygen:
     container_name: mongo-keygen
@@ -58,3 +60,4 @@ services:
 volumes:
   mongo_data:
   mongo-keyfile:
+

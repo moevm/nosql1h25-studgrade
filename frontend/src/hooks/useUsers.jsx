@@ -76,11 +76,16 @@ export function useCreateUser() {
 export function useUpdateUserById() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [status, setStatus] = useState(null)
 
   const update = async (id, data) => {
     setLoading(true);
     try {
       const res = await updateUserById(id, data);
+      console.log(res)
+      if (res.status == 200) {
+        setStatus('ok');
+      }
       return res.data;
     } catch (err) {
       setError(err);
@@ -88,9 +93,10 @@ export function useUpdateUserById() {
     } finally {
       setLoading(false);
     }
+
   };
 
-  return { update, loading, error };
+  return { update, loading, error, status };
 }
 
 // Удаление пользователя

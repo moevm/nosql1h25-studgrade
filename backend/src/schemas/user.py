@@ -52,11 +52,11 @@ class UserResponseSchema(UserBaseSchema):
 
 
 class UserUpdateSchema(BaseModel):
-    firstName: Optional[str]
-    middleName: Optional[str]
-    lastName: Optional[str]
-    email: Optional[EmailStr]
-    role: Optional[Role]
+    firstName: Optional[str] = Field(default=None)
+    middleName: Optional[str] = Field(default=None)
+    lastName: Optional[str] = Field(default=None)
+    email: Optional[EmailStr] = Field(default=None)
+    role: Optional[Role] = Field(default=None)
 
     model_config = ConfigDict(
         populate_by_name=True,
