@@ -3,10 +3,10 @@ from fastapi import Query
 from pydantic import BaseModel, Field, create_model
 from pymongo import ASCENDING, DESCENDING
 
-from src.schemas.user import UserResponseSchema
+from src.schemas.user import UserBaseSchema
 
-UserFilterFields = get_type_hints(UserResponseSchema)
-UserSortableFields: TypeAlias = Literal[tuple(UserResponseSchema.model_fields.keys())]  # type: ignore
+UserFilterFields = get_type_hints(UserBaseSchema)
+UserSortableFields: TypeAlias = Literal[tuple(UserBaseSchema.model_fields.keys())]  # type: ignore
 SortOrder: TypeAlias = Literal["asc", "desc"]
 
 
@@ -40,13 +40,5 @@ def get_user_sort_params(
     return UserSortParams(sort_by=sort_by, sort_order=sort_order)
 
 
-class PaginationParams(BaseModel):
-    limit: int = Field(default=50, ge=1, le=100)
-    offset: int = Field(default=0, ge=0)
 
 
-def get_pagination_params(
-    limit: int = Query(50, ge=1, le=100),
-    offset: int = Query(0, ge=0),
-) -> PaginationParams:
-    return PaginationParams(limit=limit, offset=offset)

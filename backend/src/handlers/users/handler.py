@@ -2,11 +2,10 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from bson import ObjectId
 from pydantic import ValidationError
 
+from src.query_params import PaginationParams, get_pagination_params
 from src.query_params.user_params import (
-    PaginationParams,
     UserFilterParams,
     UserSortParams,
-    get_pagination_params,
     get_user_sort_params,
 )
 from src.exceptions import UserAlreadyExistsError, UserNotFoundError

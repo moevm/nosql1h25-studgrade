@@ -1,6 +1,7 @@
 from bson import ObjectId
 from motor.motor_asyncio import AsyncIOMotorCollection
 from pydantic import ValidationError
+from src.query_params import PaginationParams
 from src.models.UserModel import UserModel
 from src.exceptions import (
     UserAlreadyExistsError,
@@ -8,7 +9,6 @@ from src.exceptions import (
     DataCorruptionError,
 )
 from src.query_params.user_params import (
-    PaginationParams,
     UserFilterParams,
     UserSortParams,
 )
@@ -19,14 +19,17 @@ async def save_user(
     collection: AsyncIOMotorCollection,
 ) -> UserModel:
     # Check if user with the same  email already exists
-    existing = await collection.find_one({"email": user_model.email})
-    if existing:
-        raise UserAlreadyExistsError('User with this email already exists.')
+    await ensure_email_unique(user_model.email, collection)
 
     # Insert the new user into the database
     result = await collection.insert_one(user_model.mongo_dump())
     user_model.id = result.inserted_id
     return user_model
+
+async def ensure_email_unique(email, collection):
+    existing = await collection.find_one({"email": email})
+    if existing:
+        raise UserAlreadyExistsError('User with this email already exists.')
 
 
 async def get_user_by_id(
