@@ -22,11 +22,11 @@ const UserPage = () => {
   const debouncedUserData = useDebounce(userData, 500);
   const usersParams = useMemo(() => {
     return {
-      role: selectedRoles.length > 0 ? selectedRoles : undefined,
       first_name: debouncedUserData.firstName || undefined,
       last_name: debouncedUserData.lastName || undefined,
       middle_name: debouncedUserData.middleName || undefined,
-      email: debouncedUserData.middleName || undefined
+      email: debouncedUserData.email || undefined,
+      role: selectedRoles.length > 0 ? selectedRoles : undefined,
     };
   }, [
     selectedRoles,
@@ -225,6 +225,7 @@ const UserPage = () => {
               {users.map((user) => (
                 <tr key={user.id} className={styles.info_table__row}>
                   <td>{getFullName(user)}</td>
+                  <td>{user.email}</td>
                   <td>{user.role}</td>
                   {/* <td>{student.attendance}</td>
                   <td>{student.average_score}</td> */}
