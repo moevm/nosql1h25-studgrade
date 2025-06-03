@@ -11,6 +11,7 @@ from src.schemas.teachers import (
     TeacherBulkCreateResponse,
     TeacherWithUserResponseSchema,
     TeacherCreateSchema,
+    TeacherUpdateSchema
 )
 from src.db import db
 from src.utils.security import generate_random_password, hash_password
@@ -154,48 +155,62 @@ async def get_teacher(teacher_id, collection=Depends(get_teachers_collection)):
     
     return teacher.to_response_schema()
 
-@router.patch("/{teacher_id}", response_model=TeacherWithUser)
-async def update_teacher(teacher_id: str, teacher: Teacher):
-    if not ObjectId.is_valid(teacher_id):
-        raise HTTPException(400, "Invalid teacher ID")
+# @router.patch("/{teacher_id}", response_model=TeacherWithUser)
+# async def update_teacher(teacher_id: str, teacher: Teacher):
+#     if not ObjectId.is_valid(teacher_id):
+#         raise HTTPException(400, "Invalid teacher ID")
 
-    existing = await db.teachers.find_one({"_id": ObjectId(teacher_id)})
-    if not existing:
-        raise HTTPException(404, "Teacher not found")
+#     existing = await db.teachers.find_one({"_id": ObjectId(teacher_id)})
+#     if not existing:
+#         raise HTTPException(404, "Teacher not found")
 
-    upd = teacher.model_dump(by_alias=True, exclude_unset=True)
-    if not upd:
-        return TypeAdapter(TeacherWithUser).validate_python(
-            existing | {"_id": teacher_id}
+#     upd = teacher.model_dump(by_alias=True, exclude_unset=True)
+#     if not upd:
+#         return TypeAdapter(TeacherWithUser).validate_python(
+#             existing | {"_id": teacher_id}
+#         )
+
+#     async with await db.client.start_session() as s:
+#         async with s.start_transaction():
+#             await db.teachers.update_one(
+#                 {"_id": ObjectId(teacher_id)}, {"$set": upd}, session=s
+#             )
+
+#             user_updates = {}
+#             for field, alias in [
+#                 ("first_name", "firstName"),
+#                 ("middle_name", "middleName"),
+#                 ("last_name", "lastName"),
+#             ]:
+#                 if field in teacher.__fields_set__:
+#                     user_updates[alias] = getattr(teacher, field)
+#             if user_updates:
+#                 await db.users.update_one(
+#                     {"_id": existing["userId"]}, {"$set": user_updates}, session=s
+#                 )
+
+#     updated = await db.teachers.find_one({"_id": ObjectId(teacher_id)})
+#     updated["_id"] = str(updated["_id"])
+#     updated["user"] = await db.users.find_one(
+#         {"_id": existing["userId"]}, {"passwordHash": 0}
+#     )
+#     updated["user"]["_id"] = str(updated["user"]["_id"])
+#     return TypeAdapter(TeacherWithUser).validate_python(updated)
+
+@router.patch("/{teacher_id}", response_model=TeacherWithUserResponseSchema)
+async def update_teacher(teacher_id: str, 
+                         update_data: TeacherUpdateSchema,
+                         teachers_collection=Depends(get_teachers_collection)):
+    update_dict = update_data.model_dump(exclude_none=True)
+    
+    updated_teacher = await teacher_repository.update_teacher_by_id(
+            teacher_id,
+            update_dict,
+            teachers_collection
         )
-
-    async with await db.client.start_session() as s:
-        async with s.start_transaction():
-            await db.teachers.update_one(
-                {"_id": ObjectId(teacher_id)}, {"$set": upd}, session=s
-            )
-
-            user_updates = {}
-            for field, alias in [
-                ("first_name", "firstName"),
-                ("middle_name", "middleName"),
-                ("last_name", "lastName"),
-            ]:
-                if field in teacher.__fields_set__:
-                    user_updates[alias] = getattr(teacher, field)
-            if user_updates:
-                await db.users.update_one(
-                    {"_id": existing["userId"]}, {"$set": user_updates}, session=s
-                )
-
-    updated = await db.teachers.find_one({"_id": ObjectId(teacher_id)})
-    updated["_id"] = str(updated["_id"])
-    updated["user"] = await db.users.find_one(
-        {"_id": existing["userId"]}, {"passwordHash": 0}
-    )
-    updated["user"]["_id"] = str(updated["user"]["_id"])
-    return TypeAdapter(TeacherWithUser).validate_python(updated)
-
+    
+    
+    return updated_teacher.to_response_schema()
 
 @router.delete("/{teacher_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_teacher(teacher_id: str):
