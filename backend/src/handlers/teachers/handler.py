@@ -79,10 +79,10 @@ async def list_teachers_endpoint(
     users_collection=Depends(get_users_collection),
 ):
     teacher_models = await teacher_repository.get_list_teachers(
-        teacher_filters, user_filters, sort, pagination, teachers_collection, users_collection
+        teacher_filters, sort, pagination, teachers_collection
     )
     try:
-        return [teacher.to_response_schema_with_user() for teacher in teacher_models]
+        return [teacher.to_response_schema() for teacher in teacher_models]
     except Exception as e:
         raise HTTPException(
             status_code=500,
@@ -102,20 +102,17 @@ async def create_teacher(
     users_collection=Depends(get_users_collection),
 ):
     try:
-        user_model = UserModel.from_input(teacher)
-        user_model.role = "teacher"
+        teacher_model = TeacherModel.from_input(teacher)
     except ValidationError as e:
+        print(f"Validation error: {e}")
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail=f"Validation error: {str(e)}",
-        )
+        ) from e
 
     try:
-        teacher_model = await teacher_repository.create_teacher(
-            teacher,
-            user_model,
+        saved_teacher = await teacher_repository.create_teacher(
+            teacher_model,
             teachers_collection,
-            users_collection,
         )
     except UserAlreadyExistsError as e:
         raise HTTPException(
@@ -127,7 +124,7 @@ async def create_teacher(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail=f"Validation error: {str(e)}",
         )
-    return teacher_model.to_response_schema_with_user()
+    return saved_teacher.to_response_schema()
 
 
 @router.get("/{teacher_id}", response_model=TeacherWithUser)

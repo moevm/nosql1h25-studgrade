@@ -2,10 +2,11 @@ from typing import Optional
 from bson import ObjectId
 from pydantic import BaseModel, ConfigDict, EmailStr, Field
 from passlib.context import CryptContext
+
+from src.utils.security import hash_password
 from .PyObjectID import PyObjectId
 
 
-password_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 
 class UserModel(BaseModel):
@@ -31,7 +32,7 @@ class UserModel(BaseModel):
             lastName=user_in.lastName,
             email=user_in.email,
             role=user_in.role,
-            password_hash=password_context.hash(user_in.password),
+            password_hash=hash_password(user_in.password),
         )
 
     def mongo_dump(self) -> dict:

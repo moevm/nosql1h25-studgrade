@@ -37,9 +37,7 @@ class TeacherCreateSchema(UserCreateSchema):
     )
 
 
-class TeacherWithUserResponseSchema(BaseModel):
-    user: UserResponseSchema
-    userId: Optional[PyObjectId] = Field(None, alias="userId")
+class TeacherWithUserResponseSchema(UserResponseSchema):
     assignedGroups: list[str] = Field(
         default_factory=list,
         description="List of group IDs assigned to the teacher",
