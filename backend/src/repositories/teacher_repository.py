@@ -77,3 +77,12 @@ async def update_teacher_by_id(teacher_id, update_dict, teachers_collection):
     updated = await teachers_collection.find_one({"_id": ObjectId(teacher_id)})
     return TeacherModel(**updated)
     
+async def delete_teacher_by_id(
+    teacher_id: str, teachers_collection: AsyncIOMotorCollection
+) -> None:
+    if not ObjectId.is_valid(teacher_id):
+        raise ValueError("Invalid ObjectId")
+
+    result = await teachers_collection.delete_one({"_id": ObjectId(teacher_id)})
+    if result.deleted_count == 0:
+        raise UserNotFoundError(f'Teacher with id {teacher_id} not found')
