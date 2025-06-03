@@ -212,70 +212,14 @@ async def update_teacher(teacher_id: str,
     
     return updated_teacher.to_response_schema()
 
-@router.delete("/{teacher_id}", status_code=status.HTTP_204_NO_CONTENT)
-async def delete_teacher(teacher_id: str):
-    if not ObjectId.is_valid(teacher_id):
-        raise HTTPException(400, "Invalid teacher ID")
 
-    teacher = await db.teachers.find_one({"_id": ObjectId(teacher_id)})
-    if not teacher:
-        raise HTTPException(404, "Teacher not found")
-        async with await db.client.start_session() as s:
-            async with s.start_transaction():
-                await db.teachers.delete_one(
-                    {"_id": ObjectId(teacher_id)}, session=s
-                )
-                await db.users.delete_one({"_id": teacher["userId"]}, session=s)
-
-
-@router.post(
-    "/bulk/",
-    response_model=TeacherBulkCreateResponse,
-    status_code=status.HTTP_201_CREATED,
-    tags=["teachers", "bulk"],
-)
-async def bulk_create_teachers(teachers: List[Teacher]):
+@router.delete("/{teacher_id}", status_code=status.HTTP_204_NO_CONTENT, tags=["teachers"])
+async def delete_teacher(teacher_id: str, collection=Depends(get_teachers_collection)):
     try:
-        teachers_dicts = []
-
-        async with await db.client.start_session() as s:
-            async with s.start_transaction():
-                for t in teachers:
-                    user_id, _ = await _create_linked_user(t)
-
-                    d = t.model_dump(by_alias=True, exclude={"id", "user_id"})
-                    d["userId"] = ObjectId(user_id)
-                    teachers_dicts.append(d)
-
-                result = await db.teachers.insert_many(teachers_dicts, session=s)
-
-        return TeacherBulkCreateResponse(
-            inserted_ids=[str(i) for i in result.inserted_ids]
-        )
-
-    except Exception as e:
-        raise HTTPException(500, f"Bulk create failed: {e}")
+        await teacher_repository.delete_teacher_by_id(teacher_id, collection)
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+    except UserNotFoundError as e:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
 
 
-def _generate_login(first_name: str, last_name: str) -> str:
-    return f"{first_name[0].lower()}.{last_name.lower()}"
-
-
-async def _create_linked_user(teacher: Teacher) -> tuple[str, str]:
-    raw_pwd = generate_random_password()
-    pwd_hash = hash_password(raw_pwd)
-
-    login = _generate_login(teacher.first_name, teacher.last_name)
-    email = f"{login}@example.com"
-
-    user_dict = {
-        "firstName": teacher.first_name,
-        "middleName": teacher.middle_name,
-        "lastName": teacher.last_name,
-        "login": login,
-        "email": email,
-        "passwordHash": pwd_hash,
-        "role": "teacher",
-    }
-    res = await db.users.insert_one(user_dict)
-    return str(res.inserted_id), raw_pwd
