@@ -7,7 +7,7 @@ import StatsMainPage from "./pages/StatsMainPage";
 // Import the layouts
 import PageLayout from "./components/PageLayout";
 import CreateUserPage from "./pages/CreateUserPage/CreateUserPage";
-
+import CreateTeacherPage from "./pages/CreateTeacherPage/CreateTeacherPage";
 import UpdateUserPage from './pages/UpdateUserPage/UpdateUserPage'
 import UserPage from "./pages/UserPage/UserPage";
 
@@ -26,6 +26,10 @@ export const router = createBrowserRouter([
       {
         element: <CreateUserPage />,
         path: "/users/create",
+      },
+      {
+        element: <CreateTeacherPage />,
+        path: "/teachers/create",
       },
       {
         element: <UpdateUserPage />,
