@@ -12,7 +12,7 @@ services:
     ports:
       - "127.0.0.1:8000:8000"
     depends_on:
-      - mongo
+      - bd
     environment:
       CORS_ORIGINS: ${CORS_ORIGINS}
 
