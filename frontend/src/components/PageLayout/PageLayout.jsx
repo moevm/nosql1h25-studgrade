@@ -11,14 +11,17 @@ const PageLayout = () => {
       </header>
       <div className={styles.container}>
         <aside className={styles.aside_menu}>
-          <NavLink to={"/users"} className={styles.aside_menu__link}>
+          <NavLink to={"/users/create"} end className={styles.aside_menu__link}>
             Создать пользователя
           </NavLink>
-          <NavLink to={"/profile"} className={styles.aside_menu__link}>
-            <ProfileIcon /> Профиль
+          <NavLink to={"/teachers/create"} end className={styles.aside_menu__link}>
+            Создать преподавателя 
           </NavLink>
-          <NavLink to={"/"} className={styles.aside_menu__link}>
-            <StatsIcon /> Статистика
+          <NavLink to={"/users/"} end className={styles.aside_menu__link}>
+            <StatsIcon /> Пользователи
+          </NavLink>
+          <NavLink to={"/teachers/"} end   className={styles.aside_menu__link}>
+            <StatsIcon /> Преподаватели
           </NavLink>
         </aside>
         <div className={styles.main}>

@@ -18,6 +18,7 @@ from src.query_params.teacher_params import (
     TeacherFilterParams,
     TeacherSortParams,
     get_teacher_sort_params,
+    get_teacher_filter_params
 )
 
 router = APIRouter()
@@ -26,7 +27,7 @@ router = APIRouter()
 
 @router.get("/", response_model=list[TeacherWithUserResponseSchema])
 async def list_teachers_endpoint(
-    teacher_filters: TeacherFilterParams = Depends(),  # type: ignore
+    teacher_filters: TeacherFilterParams = Depends(get_teacher_filter_params),  # type: ignore
     pagination: PaginationParams = Depends(get_pagination_params),
     sort: TeacherSortParams = Depends(get_teacher_sort_params),
     teachers_collection=Depends(get_teachers_collection),

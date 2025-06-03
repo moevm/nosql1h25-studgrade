@@ -1,5 +1,5 @@
 from typing import get_type_hints, Literal, Optional, TypeAlias
-from pydantic import create_model, BaseModel, Field
+from pydantic import create_model, BaseModel, Field, EmailStr
 from fastapi import Query
 from pymongo import ASCENDING, DESCENDING
 from src.schemas.teachers import TeacherBaseSchema
@@ -9,19 +9,64 @@ TeacherSortableFields: TypeAlias = Literal[tuple(TeacherBaseSchema.model_fields.
 SortOrder: TypeAlias = Literal["asc", "desc"]
 
 
-def to_mongo_filter(self) -> dict:
-    return {k: v for k, v in self.model_dump(exclude_none=True).items()}
+class TeacherFilterParams(BaseModel):
+    firstName: Optional[str]
+    middleName: Optional[str] = Field(
+        default=None,
+        description="Middle name of the user",
+    )
+    lastName: Optional[str]
+    email: Optional[EmailStr]
+    role: Optional[Literal['teacher']]
+    assignedGroups: list[str] = Field(
+        default_factory=list,
+        description="List of group IDs assigned to the teacher",
+    )
+    assignedSubjects: list[str] = Field(
+        default_factory=list,
+        description="List of subject IDs assigned to the teacher",
+    )
 
+    def to_mongo_filter(self) -> dict:
+        filters = {}
+        for k, v in self.model_dump(exclude_none=True).items():
+            if isinstance(v, str):
+                v = {"$regex": v}
+            elif isinstance(v, list):
+                if not v:
+                    continue
+                v =  {"$in" : v} 
+            filters[k] = v
+        return filters
 
-TeacherFilterParams = create_model(
-    "TeacherFilterParams",
-    **{
-        name: (Optional[field_type], None)
-        for name, field_type in TeacherFilterFields.items()
-    }
-)
-TeacherFilterParams.to_mongo_filter = to_mongo_filter
+def get_teacher_filter_params(
+    firstName: Optional[str] = Query(None),
+    middleName: Optional[str] = Query(
+        default=None,
+        description="Middle name of the user",
+    ),
+    lastName: Optional[str] = Query(None),
+    email: Optional[EmailStr] = Query(None),
+    role: Optional[Literal['teacher']] = Query(None),
+    assignedGroups: list[str] = Query(
+        default_factory=list,
+        description="List of group IDs assigned to the teacher",
+    ),
+    assignedSubjects: list[str] = Query(
+        default_factory=list,
+        description="List of subject IDs assigned to the teacher",
+    ),
 
+):
+    return TeacherFilterParams(
+        firstName=firstName,
+        middleName=middleName,
+        lastName=lastName,
+        email=email,
+        role=role,
+        assignedGroups=assignedGroups,
+        assignedSubjects=assignedSubjects
+    )
 
 class TeacherSortParams(BaseModel):
     sort_by: TeacherSortableFields = Field(default="userId")

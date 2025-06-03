@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { Link } from "react-router-dom"
 import styles from "./TeacherPage.module.css";
 import DownloadIcon from "../../public/download.svg?react";
 import UploadIcon from "../../public/upload.svg?react";
@@ -11,7 +12,7 @@ import getFullName from "../../utils/getFullName";
 
 const ROLES = ["student", "teacher", "admin"];
 const GROUPS = ["2381", "2382", "2383"];
-const SUBJECTS = ["Math", "English", "C++"]
+const SUBJECTS = ["Math", "English", "C++"];
 
 const TeacherPage = () => {
   const [selectedRoles, setSelectedRoles] = useState([]);
@@ -21,32 +22,27 @@ const TeacherPage = () => {
     firstName: "",
     lastName: "",
     middleName: "",
-    email: ""
+    email: "",
   });
   const debouncedUserData = useDebounce(userData, 500);
   const teachersParams = useMemo(() => {
     return {
-      first_name: debouncedUserData.firstName || undefined,
-      last_name: debouncedUserData.lastName || undefined,
-      middle_name: debouncedUserData.middleName || undefined,
+      firstName: debouncedUserData.firstName || undefined,
+      lastName: debouncedUserData.lastName || undefined,
+      middleName: debouncedUserData.middleName || undefined,
       email: debouncedUserData.email || undefined,
       role: selectedRoles.length > 0 ? selectedRoles : undefined,
       assignedGroups: selectedGroups.length > 0 ? selectedGroups : undefined,
-      assignedSubjects: selectedSubjects.length > 0 ? selectedSubjects : undefined,
+      assignedSubjects:
+        selectedSubjects.length > 0 ? selectedSubjects : undefined,
     };
-  }, [
-    selectedRoles,
-    selectedGroups,
-    selectedSubjects
-  ]);
+  }, [selectedRoles, selectedGroups, selectedSubjects, debouncedUserData]);
   const { teachers, loading, error } = useTeachers(teachersParams);
   console.log(teachersParams, teachers);
 
   const toggleRole = (role) => {
     setSelectedRoles((prev) =>
-      prev.includes(role)
-        ? prev.filter((f) => f !== role)
-        : [...prev, role]
+      prev.includes(role) ? prev.filter((f) => f !== role) : [...prev, role]
     );
   };
   const toggleGroup = (assignedGroups) => {
@@ -171,20 +167,6 @@ const TeacherPage = () => {
           </label>
         </fieldset>
         <fieldset className={styles.filter_group}>
-          <legend className={styles.filter_group__title}>РОЛЬ</legend>
-          {ROLES.map((role) => (
-            <label key={role} className={styles.filter_checkbox}>
-              <input
-                type="checkbox"
-                onChange={() => toggleRole(role)}
-                name={role}
-                checked={selectedRoles.includes(role)}
-              />
-              <div>{role}</div>
-            </label>
-          ))}
-        </fieldset>
-        <fieldset className={styles.filter_group}>
           <legend className={styles.filter_group__title}>ГРУППЫ</legend>
           {GROUPS.map((assignedGroups) => (
             <label key={assignedGroups} className={styles.filter_checkbox}>
@@ -198,22 +180,7 @@ const TeacherPage = () => {
             </label>
           ))}
         </fieldset>
-        <fieldset className={styles.filter_group}>
-          <legend className={styles.filter_group__title}>ГРУППЫ</legend>
-          <div className={styles.groupsContainer}>
-            {GROUPS.map((assignedGroups) => (
-              <label key={assignedGroups} className={styles.filter_checkbox}>
-                <input
-                  type="checkbox"
-                  onChange={() => toggleGroup(assignedGroups)}
-                  name={assignedGroups}
-                  checked={selectedGroups.includes(assignedGroups)}
-                />
-                <div>{assignedGroups}</div>
-              </label>
-            ))}
-          </div>
-        </fieldset>
+        
         {/* <fieldset className={styles.filter_group}>
           <legend className={styles.filter_group__title}>Балл</legend>
           <div className={styles.filter_range}>
@@ -277,13 +244,13 @@ const TeacherPage = () => {
             <tbody className={styles.info_table__body}>
               {teachers.map((teacher) => (
                 <tr key={teacher.id} className={styles.info_table__row}>
-                  <td>{getFullName(teacher)}</td>
-                  <td>{teacher.email}</td>
-                  <td>{teacher.role}</td>
-                  <td>{teacher.assignedGroups}</td>
-                  <td>{teacher.assignedSubjects}</td>
-                  {/* <td>{student.attendance}</td>
-                  <td>{student.average_score}</td> */}
+                  <Link to={`/users/${teacher.id}/`}>
+                    <td>{getFullName(teacher)}</td>
+                  </Link>
+                    <td>{teacher.email}</td>
+                    <td>{teacher.role}</td>
+                    <td>{teacher.assignedGroups}</td>
+                    <td>{teacher.assignedSubjects}</td>
                 </tr>
               ))}
             </tbody>
