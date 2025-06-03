@@ -7,7 +7,7 @@ services:
     ports:
       - "127.0.0.1:5173:5173"
     volumes:
-      - ../frontend:/app
+      - ./frontend:/app
       - /app/node_modules
 
   swagger:
@@ -18,4 +18,4 @@ services:
     environment:
       - SWAGGER_JSON=/foo/swagger.yml
     volumes:
-      - ../swagger:/foo
+      - ./swagger:/foo
