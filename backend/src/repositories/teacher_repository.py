@@ -62,3 +62,18 @@ async def get_teacher_by_id(teacher_id: str, collection: AsyncIOMotorCollection)
                                 )
     return TeacherModel(**teacher)
     
+    
+async def update_teacher_by_id(teacher_id, update_dict, teachers_collection):
+    if not ObjectId.is_valid(teacher_id):
+        raise ValueError("Invalid ObjectId")
+
+    result = await teachers_collection.update_one(
+        {"_id": ObjectId(teacher_id)}, {"$set": update_dict}
+    )
+
+    if result.matched_count == 0:
+        raise UserNotFoundError()
+
+    updated = await teachers_collection.find_one({"_id": ObjectId(teacher_id)})
+    return TeacherModel(**updated)
+    
