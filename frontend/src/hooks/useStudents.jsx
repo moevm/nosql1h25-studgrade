@@ -33,7 +33,7 @@ export function useStudents(params = {}) {
 }
 
 export function useStudentById(id) {
-  const [student, setStudent] = useState(null);
+  const [data, setData] = useState(null);
   const [loading, setLoading] = useState(!!id);
   const [error, setError] = useState(null);
 
@@ -41,12 +41,12 @@ export function useStudentById(id) {
     if (!id) return;
     setLoading(true);
     getStudentById(id)
-      .then((res) => setStudent(res.data))
+      .then((res) => setData(res.data))
       .catch((err) => setError(err))
       .finally(() => setLoading(false));
   }, [id]);
 
-  return { student, loading, error };
+  return { data, loading, error };
 }
 
 export function useCreateStudent() {

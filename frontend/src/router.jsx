@@ -9,14 +9,15 @@ import PageLayout from "./components/PageLayout";
 import CreateUserPage from "./pages/CreateUserPage/CreateUserPage";
 
 import UpdateUserPage from './pages/UpdateUserPage/UpdateUserPage'
+import UserPage from "./pages/UserPage/UserPage";
 
 export const router = createBrowserRouter([
   {
     element: <PageLayout />,
     children: [
       {
-        element: <ProfilePage />,
-        path: "/profile",
+        element: <ProfilePage role='user' />,
+        path: "/users/:userId",
       },
       {
         element: <StatsMainPage />,
@@ -24,11 +25,15 @@ export const router = createBrowserRouter([
       },
       {
         element: <CreateUserPage />,
-        path: "/users",
+        path: "/users/create",
       },
       {
         element: <UpdateUserPage />,
         path: "/users/:userId/update",
+      },
+      {
+        element: <UserPage />,
+        path: "/users",
       },
     ],
   },

@@ -35,7 +35,7 @@ export function useUsers(params = {}) {
 
 // Получение пользователя по ID
 export function useUserById(id) {
-  const [user, setUser] = useState(null);
+  const [data, setData] = useState(null);
   const [loading, setLoading] = useState(!!id);
   const [error, setError] = useState(null);
 
@@ -43,12 +43,12 @@ export function useUserById(id) {
     if (!id) return;
     setLoading(true);
     getUserById(id)
-      .then((res) => setUser(res.data))
+      .then((res) => setData(res.data))
       .catch((err) => setError(err))
       .finally(() => setLoading(false));
   }, [id]);
 
-  return { user, loading, error };
+  return { data, loading, error };
 }
 
 // Создание пользователя

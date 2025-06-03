@@ -6,25 +6,78 @@ import MoreIcon from "../../public/more.svg?react";
 import { useStudentById, useUpdateStudentById } from "../../hooks/useStudents";
 import { useEffect, useState } from "react";
 import getFullName from "../../utils/getFullName";
+import { useParams } from "react-router-dom";
+import { useUpdateUserById, useUserById } from "../../hooks/useUsers";
+import { useTeacherById, useUpdateTeacherById } from "../../hooks/useTeachers";
 
-const ProfilePage = () => {
-  const {
-    student: user,
-    loading,
-    error,
-  } = useStudentById("6814fdae2fc966af516ab827");
+const useUserMap = {
+  student: useStudentById,
+  user: useUserById,
+  teacher: useTeacherById,
+};
+
+const useUpdateMap = {
+  student: useUpdateStudentById,
+  user: useUpdateUserById,
+  teacher: useUpdateTeacherById,
+};
+
+const fields = {
+  firstName: {
+    title: "Имя",
+    type: "text",
+  },
+  lastName: {
+    title: "Фамилия",
+    type: "text",
+  },
+  role: {
+    title: "Роль",
+    type: "text",
+  },
+  middleName: {
+    title: "Отчество",
+    type: "text",
+  },
+  email: {
+    title: "Почта",
+    type: "email",
+  },
+};
+const Field = ({ title, isEditMode, type, value, onChange, name }) => (
+  <label className={styles.field}>
+    <div className={styles.filed_name}>{title || name}</div>
+    <input
+      name={name}
+      readOnly={!isEditMode}
+      className={styles.filed_input}
+      type={type}
+      value={value}
+      onChange={onChange}
+    />
+  </label>
+);
+
+const ProfilePage = ({ role }) => {
+  const useUser = useUserMap[role];
+  const useUpdateUser = useUpdateMap[role];
+
+  const { userId } = useParams();
+  const { data: user, loading, error } = useUser(userId);
 
   const {
     update,
     loading: updateLoading,
     error: updateError,
-  } = useUpdateStudentById();
+  } = useUpdateUser();
+
+  console.log(updateError)
 
   const [userData, setUserData] = useState({});
 
   useEffect(() => {
     if (user) {
-      setUserData(user);
+      setUserData({ ...user, id: undefined });
     }
   }, [user]);
 
@@ -36,17 +89,12 @@ const ProfilePage = () => {
 
   const handleSaveClick = () => {
     console.log("userData", userData);
-    update(userData._id, userData);
+    update(userId, userData);
   };
 
   if (loading || updateLoading)
     return <div className={styles.main_block}>Loading...</div>;
-  if (error || updateError)
-    return (
-      <div className={styles.main_block}>
-        Error: {error?.message || updateError?.message}
-      </div>
-    );
+
   if (!user)
     return <div className={styles.main_block}>Пользователь не найден</div>;
   return (
@@ -61,200 +109,44 @@ const ProfilePage = () => {
             Сохранить
           </button>
         )}
+        {(error || updateError) && (
+          <span>Error: {error?.message || updateError?.response?.data?.detail?.[0]?.msg}</span>
+        )}
       </div>
       <div className={styles.main_columns_container}>
         <div className={styles.fields_colomns_container}>
-          <div className={styles.fields_colomn}>
-            <div className={styles.fields_row}>
-              <label className={styles.field}>
-                <div className={styles.filed_name}>Фамилия</div>
-                <input
-                  readOnly={!isEditMode}
-                  className={styles.filed_input}
-                  type="text"
-                  value={isEditMode ? userData.lastName : user.lastName}
-                  onChange={(e) =>
-                    setUserData((prev) => ({
-                      ...prev,
-                      lastName: e.target.value,
-                    }))
-                  }
-                />
-              </label>
-            </div>
-            <div className={styles.fields_row}>
-              <label className={styles.field}>
-                <div className={styles.filed_name}>Имя</div>
-                <input
-                  readOnly={!isEditMode}
-                  className={styles.filed_input}
-                  type="text"
-                  value={isEditMode ? userData.firstName : user.firstName}
-                  onChange={(e) =>
-                    setUserData((prev) => ({
-                      ...prev,
-                      firstName: e.target.value,
-                    }))
-                  }
-                />
-              </label>
-            </div>
-            <div className={styles.fields_row}>
-              <label className={styles.field}>
-                <div className={styles.filed_name}>Отчество</div>
-                <input
-                  readOnly={!isEditMode}
-                  className={styles.filed_input}
-                  type="text"
-                  value={isEditMode ? userData.middleName : user.middleName}
-                  onChange={(e) =>
-                    setUserData((prev) => ({
-                      ...prev,
-                      middleName: e.target.value,
-                    }))
-                  }
-                />
-              </label>
-            </div>
-
-            <div className={styles.fields_row}>
-              <label className={styles.field}>
-                <div className={styles.filed_name}>Дата рождения</div>
-                <input
-                  readOnly={!isEditMode}
-                  className={styles.filed_input}
-                  type="date"
-                  value={
-                    new Date(isEditMode ? userData.birthDate : user.birthDate)
-                      .toISOString()
-                      .split("T")[0]
-                  }
-                  onChange={(e) =>
-                    setUserData((prev) => ({
-                      ...prev,
-                      birthDate: e.target.value,
-                    }))
-                  }
-                />
-              </label>
-              <label className={styles.field}>
-                <div className={styles.filed_name}>Год поступления</div>
-                <input
-                  readOnly={!isEditMode}
-                  className={styles.filed_input}
-                  type="number"
-                  value={
-                    isEditMode ? userData.admissionYear : user.admissionYear
-                  }
-                  onChange={(e) =>
-                    setUserData((prev) => ({
-                      ...prev,
-                      admissionYear: e.target.value,
-                    }))
-                  }
-                />
-              </label>
-            </div>
-          </div>
-
-          <div className={styles.fields_colomn}>
-            <div className={styles.fields_row}>
-              <label className={styles.field}>
-                <div className={styles.filed_name}>Уровень образования</div>
-                <input
-                  readOnly={!isEditMode}
-                  className={styles.filed_input}
-                  type="text"
-                  value={isEditMode ? userData.studentType : user.studentType}
-                  onChange={(e) =>
-                    setUserData((prev) => ({
-                      ...prev,
-                      studentType: e.target.value,
-                    }))
-                  }
-                />
-              </label>
-            </div>
-
-            <div className={styles.fields_row}>
-              <label className={styles.field}>
-                <div className={styles.filed_name}>Факультет</div>
-                <input
-                  readOnly={!isEditMode}
-                  className={styles.filed_input}
-                  type="text"
-                  value={isEditMode ? userData.faculty : user.faculty}
-                  onChange={(e) =>
-                    setUserData((prev) => ({
-                      ...prev,
-                      faculty: e.target.value,
-                    }))
-                  }
-                />
-              </label>
-            </div>
-            <div className={styles.fields_row}>
-              <label className={styles.field}>
-                <div className={styles.filed_name}>Направление</div>
-                <input
-                  readOnly={!isEditMode}
-                  className={styles.filed_input}
-                  type="string"
-                  value={isEditMode ? userData.programName : user.programName}
-                  onChange={(e) =>
-                    setUserData((prev) => ({
-                      ...prev,
-                      programName: e.target.value,
-                    }))
-                  }
-                />
-              </label>
-            </div>
-
-            <div className={styles.fields_row}>
-              <label className={styles.field}>
-                <div className={styles.filed_name}>Курс</div>
-                <input
-                  readOnly={!isEditMode}
-                  className={styles.filed_input}
-                  type="number"
-                  id="course"
-                  value={isEditMode ? userData.course : user.course}
-                  onChange={(e) =>
-                    setUserData((prev) => ({
-                      ...prev,
-                      course: e.target.value,
-                    }))
-                  }
-                />
-              </label>
-              <label className={styles.field}>
-                <div className={styles.filed_name}>Группа</div>
-                <input
-                  readOnly={!isEditMode}
-                  className={styles.filed_input}
-                  type="number"
-                  id="group"
-                  value={isEditMode ? userData.groupName : user.groupName}
-                  onChange={(e) =>
-                    setUserData((prev) => ({
-                      ...prev,
-                      groupName: e.target.value,
-                    }))
-                  }
-                />
-              </label>
-            </div>
-          </div>
+          {!loading &&
+            user &&
+            Object.keys(user).map(
+              (key) =>
+                key !== "id" && (
+                  <Field
+                    key={key}
+                    title={fields[key]?.title}
+                    name={key}
+                    isEditMode={isEditMode}
+                    type={fields[key]?.type}
+                    value={isEditMode ? userData[key] : user[key]}
+                    onChange={(e) =>
+                      setUserData((prev) => ({
+                        ...prev,
+                        [key]: e.target.value,
+                      }))
+                    }
+                  />
+                )
+            )}
         </div>
 
         <div>
           <div className={styles.avatar_block}>
             <div className={styles.avatar_description}>
               <div className={styles.avatar_fullname}>{getFullName(user)}</div>
-              <div className={styles.avatar_group}>
-                ГРУППА {isEditMode ? userData.groupName : user.groupName}
-              </div>
+              {user?.groupName && (
+                <div className={styles.avatar_group}>
+                  ГРУППА {isEditMode ? userData.groupName : user.groupName}
+                </div>
+              )}
             </div>
             {/* <div className={styles.avatar_action_buttons}>
               <div className={styles.avatar_action_button}>
