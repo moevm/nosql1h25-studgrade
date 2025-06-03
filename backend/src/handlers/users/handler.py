@@ -7,6 +7,7 @@ from src.query_params.user_params import (
     UserFilterParams,
     UserSortParams,
     get_user_sort_params,
+    get_user_filter_params
 )
 from src.exceptions import UserAlreadyExistsError, UserNotFoundError
 from src.repositories import user_repository
@@ -105,7 +106,7 @@ async def delete_user_endpoint(
 
 @router.get("/", response_model=list[UserResponseSchema])
 async def list_users_endpoint(
-    filters: UserFilterParams = Depends(),  # type: ignore
+    filters: UserFilterParams = Depends(get_user_filter_params),  # type: ignore
     pagination: PaginationParams = Depends(get_pagination_params),
     sort: UserSortParams = Depends(get_user_sort_params),
     collection=Depends(get_users_collection),
