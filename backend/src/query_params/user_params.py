@@ -3,10 +3,10 @@ from fastapi import Query
 from pydantic import BaseModel, Field, create_model
 from pymongo import ASCENDING, DESCENDING
 
-from src.schemas.user import UserResponseSchema
+from src.schemas.user import UserBaseSchema
 
-UserFilterFields = get_type_hints(UserResponseSchema)
-UserSortableFields: TypeAlias = Literal[tuple(UserResponseSchema.model_fields.keys())]  # type: ignore
+UserFilterFields = get_type_hints(UserBaseSchema)
+UserSortableFields: TypeAlias = Literal[tuple(UserBaseSchema.model_fields.keys())]  # type: ignore
 SortOrder: TypeAlias = Literal["asc", "desc"]
 
 

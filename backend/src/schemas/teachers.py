@@ -1,13 +1,12 @@
 from pydantic import BaseModel, ConfigDict, Field, EmailStr
 from typing import Literal, Optional
-from bson import ObjectId
-from pydantic_core import core_schema
+
 from .PyObjectID import PyObjectId
 
-from .user import UserCreateSchema, UserResponseSchema
+from .user import UserCreateSchema, UserResponseSchema, UserBaseSchema
 
 
-class TeacherCreateSchema(UserCreateSchema):
+class TeacherBaseSchema(UserBaseSchema):
     assignedGroups: list[str] = Field(
         default_factory=list,
         description="List of group IDs assigned to the teacher",
@@ -19,6 +18,10 @@ class TeacherCreateSchema(UserCreateSchema):
     role: Literal["teacher"] = Field(
         default="teacher",
     )
+
+
+class TeacherCreateSchema(TeacherBaseSchema, UserCreateSchema):
+
     model_config = ConfigDict(
         populate_by_name=True,
         arbitrary_types_allowed=True,
@@ -37,15 +40,8 @@ class TeacherCreateSchema(UserCreateSchema):
     )
 
 
-class TeacherWithUserResponseSchema(UserResponseSchema):
-    assignedGroups: list[str] = Field(
-        default_factory=list,
-        description="List of group IDs assigned to the teacher",
-    )
-    assignedSubjects: list[str] = Field(
-        default_factory=list,
-        description="List of subject IDs assigned to the teacher",
-    )
+class TeacherWithUserResponseSchema(TeacherBaseSchema, UserResponseSchema):
+
     model_config = ConfigDict(
         populate_by_name=True,
         arbitrary_types_allowed=True,

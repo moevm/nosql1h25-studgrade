@@ -72,11 +72,9 @@ router = APIRouter()
 @router.get("/", response_model=list[TeacherWithUserResponseSchema])
 async def list_teachers_endpoint(
     teacher_filters: TeacherFilterParams = Depends(),  # type: ignore
-    user_filters: UserFilterParams = Depends(),  # type: ignore
     pagination: PaginationParams = Depends(get_pagination_params),
     sort: TeacherSortParams = Depends(get_teacher_sort_params),
     teachers_collection=Depends(get_teachers_collection),
-    users_collection=Depends(get_users_collection),
 ):
     teacher_models = await teacher_repository.get_list_teachers(
         teacher_filters, sort, pagination, teachers_collection

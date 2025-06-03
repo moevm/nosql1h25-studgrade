@@ -2,10 +2,10 @@ from typing import get_type_hints, Literal, Optional, TypeAlias
 from pydantic import create_model, BaseModel, Field
 from fastapi import Query
 from pymongo import ASCENDING, DESCENDING
-from src.schemas.teachers import TeacherWithUserResponseSchema
+from src.schemas.teachers import TeacherBaseSchema
 
-TeacherFilterFields = get_type_hints(TeacherWithUserResponseSchema)
-TeacherSortableFields: TypeAlias = Literal[tuple(TeacherWithUserResponseSchema.model_fields.keys())]  # type: ignore
+TeacherFilterFields = get_type_hints(TeacherBaseSchema)
+TeacherSortableFields: TypeAlias = Literal[tuple(TeacherBaseSchema.model_fields.keys())]  # type: ignore
 SortOrder: TypeAlias = Literal["asc", "desc"]
 
 
