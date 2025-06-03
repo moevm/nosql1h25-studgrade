@@ -1,3 +1,3 @@
 import CreateTeacherPage from "./CreateTeacherPage";
 
-export default reateTeacherPage;
+export default CreateTeacherPage;
