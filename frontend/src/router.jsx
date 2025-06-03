@@ -11,6 +11,7 @@ import CreateAdminPage from "./pages/CreateAdminPage/CreateAdminPage";
 import CreateTeacherPage from "./pages/CreateTeacherPage/CreateTeacherPage";
 import UpdateUserPage from './pages/UpdateUserPage/UpdateUserPage'
 import UserPage from "./pages/UserPage/UserPage";
+import TeacherPage from "./pages/TeacherPage/TeacherPage";
 
 export const router = createBrowserRouter([
   {
@@ -43,6 +44,10 @@ export const router = createBrowserRouter([
       {
         element: <UserPage />,
         path: "/users",
+      },
+      {
+        element: <TeacherPage />,
+        path: "/teachers",
       },
     ],
   },

@@ -3,8 +3,11 @@ import { useNavigate } from 'react-router-dom';
 import { useCreateUser } from '../../hooks/useUsers';
 import styles from './CreateTeacherPage.module.css';
 
+const GROUPS = ["2381", "2382", "2383"];
+
 const CreateTeacherPage = () => {
   const navigate = useNavigate();
+  const [selectedGroups, setSelectedGroups] = useState([]);
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -13,6 +16,7 @@ const CreateTeacherPage = () => {
     password: '',
     role: "teacher"
   });
+  
   
   const [error, setError] = useState(null);
   const { create, loading: createLoading } = useCreateUser();
