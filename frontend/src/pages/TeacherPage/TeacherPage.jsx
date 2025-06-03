@@ -4,16 +4,18 @@ import DownloadIcon from "../../public/download.svg?react";
 import UploadIcon from "../../public/upload.svg?react";
 import ArrowBackIcon from "../../public/arrow_back.svg?react";
 import ArrowForwardIcon from "../../public/arrow_forward.svg?react";
-import { useUsers } from "../../hooks/useUsers";
+import { useTeachers } from "../../hooks/useTeachers";
+
 import { useDebounce } from "../../hooks/useDebounce";
 import getFullName from "../../utils/getFullName";
 
 const ROLES = ["student", "teacher", "admin"];
 const GROUPS = ["2381", "2382", "2383"];
+const SUBJECTS = ["Math", "English", "C++"]
 
-
-const UserPage = () => {
+const TeacherPage = () => {
   const [selectedRoles, setSelectedRoles] = useState([]);
+  const [selectedSubjects, setSelectedSubjects] = useState([]);
   const [selectedGroups, setSelectedGroups] = useState([]);
   const [userData, setUserData] = useState({
     firstName: "",
@@ -22,7 +24,7 @@ const UserPage = () => {
     email: ""
   });
   const debouncedUserData = useDebounce(userData, 500);
-  const usersParams = useMemo(() => {
+  const teachersParams = useMemo(() => {
     return {
       first_name: debouncedUserData.firstName || undefined,
       last_name: debouncedUserData.lastName || undefined,
@@ -30,13 +32,15 @@ const UserPage = () => {
       email: debouncedUserData.email || undefined,
       role: selectedRoles.length > 0 ? selectedRoles : undefined,
       assignedGroups: selectedGroups.length > 0 ? selectedGroups : undefined,
+      assignedSubjects: selectedSubjects.length > 0 ? selectedSubjects : undefined,
     };
   }, [
     selectedRoles,
-    selectedGroups
+    selectedGroups,
+    selectedSubjects
   ]);
-  const { users, loading, error } = useUsers(usersParams);
-  console.log(usersParams, users);
+  const { teachers, loading, error } = useTeachers(teachersParams);
+  console.log(teachersParams, teachers);
 
   const toggleRole = (role) => {
     setSelectedRoles((prev) =>
@@ -45,14 +49,20 @@ const UserPage = () => {
         : [...prev, role]
     );
   };
-  const toggleGroup = (group) => {
+  const toggleGroup = (assignedGroups) => {
     setSelectedGroups((prev) =>
-      prev.includes(group)
-        ? prev.filter((f) => f !== group)
-        : [...prev, group]
+      prev.includes(assignedGroups)
+        ? prev.filter((f) => f !== assignedGroups)
+        : [...prev, assignedGroups]
     );
   };
-
+  const toggleSubject = (assignedSubjects) => {
+    setSelectedSubjects((prev) =>
+      prev.includes(assignedSubjects)
+        ? prev.filter((f) => f !== assignedSubjects)
+        : [...prev, assignedSubjects]
+    );
+  };
   return (
     <div className={styles.main}>
       <div className={styles.generals_buttons}>
@@ -176,17 +186,33 @@ const UserPage = () => {
         </fieldset>
         <fieldset className={styles.filter_group}>
           <legend className={styles.filter_group__title}>ГРУППЫ</legend>
-          {GROUPS.map((group) => (
-            <label key={group} className={styles.filter_checkbox}>
+          {GROUPS.map((assignedGroups) => (
+            <label key={assignedGroups} className={styles.filter_checkbox}>
               <input
                 type="checkbox"
-                onChange={() => toggleGroup(group)}
-                name={group}
-                checked={selectedGroups.includes(group)}
+                onChange={() => toggleGroup(assignedGroups)}
+                name={assignedGroups}
+                checked={selectedGroups.includes(assignedGroups)}
               />
-              <div>{group}</div>
+              <div>{assignedGroups}</div>
             </label>
           ))}
+        </fieldset>
+        <fieldset className={styles.filter_group}>
+          <legend className={styles.filter_group__title}>ГРУППЫ</legend>
+          <div className={styles.groupsContainer}>
+            {GROUPS.map((assignedGroups) => (
+              <label key={assignedGroups} className={styles.filter_checkbox}>
+                <input
+                  type="checkbox"
+                  onChange={() => toggleGroup(assignedGroups)}
+                  name={assignedGroups}
+                  checked={selectedGroups.includes(assignedGroups)}
+                />
+                <div>{assignedGroups}</div>
+              </label>
+            ))}
+          </div>
         </fieldset>
         {/* <fieldset className={styles.filter_group}>
           <legend className={styles.filter_group__title}>Балл</legend>
@@ -215,6 +241,7 @@ const UserPage = () => {
               <th>Электронная почта</th>
               <th>Роль</th>
               <th>Группы</th>
+              <th>Предметы</th>
               {/* <th>Посещаемость</th>
               <th>Средний балл</th> */}
             </tr>
@@ -237,7 +264,7 @@ const UserPage = () => {
               </tr>
             </tbody>
           )}
-          {!loading && !error && users.length === 0 && (
+          {!loading && !error && teachers.length === 0 && (
             <tbody className={styles.info_table__body}>
               <tr>
                 <td colSpan="6" className={styles.info_table__loading}>
@@ -246,14 +273,15 @@ const UserPage = () => {
               </tr>
             </tbody>
           )}
-          {!loading && users.length > 0 && (
+          {!loading && teachers.length > 0 && (
             <tbody className={styles.info_table__body}>
-              {users.map((user) => (
-                <tr key={user.id} className={styles.info_table__row}>
-                  <td>{getFullName(user)}</td>
-                  <td>{user.email}</td>
-                  <td>{user.role}</td>
-                  <td>{user.assignedGroups}</td>
+              {teachers.map((teacher) => (
+                <tr key={teacher.id} className={styles.info_table__row}>
+                  <td>{getFullName(teacher)}</td>
+                  <td>{teacher.email}</td>
+                  <td>{teacher.role}</td>
+                  <td>{teacher.assignedGroups}</td>
+                  <td>{teacher.assignedSubjects}</td>
                   {/* <td>{student.attendance}</td>
                   <td>{student.average_score}</td> */}
                 </tr>
@@ -276,4 +304,4 @@ const UserPage = () => {
   );
 };
 
-export default UserPage;
+export default TeacherPage;
